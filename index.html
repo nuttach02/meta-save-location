@@ -40,6 +40,36 @@
   --radius:12px;
   --radius-sm:8px;
 }
+[data-theme="light"]{
+  --bg:#f0f2f7;
+  --surface:#ffffff;
+  --surface2:#f5f6fa;
+  --surface3:#eaecf3;
+  --accent:#3b6fd4;
+  --accent-soft:rgba(59,111,212,0.12);
+  --green:#2e9e62;
+  --green-soft:rgba(46,158,98,0.12);
+  --amber:#c47f0a;
+  --amber-soft:rgba(196,127,10,0.1);
+  --red:#c0394a;
+  --red-soft:rgba(192,57,74,0.1);
+  --purple:#7c52d0;
+  --purple-soft:rgba(124,82,208,0.12);
+  --teal:#1f9e94;
+  --teal-soft:rgba(31,158,148,0.12);
+  --text:#1a1d27;
+  --text2:#4a5270;
+  --text3:#8892aa;
+  --border:#d8dce8;
+  --border2:#c0c6d8;
+  --f0s:#3b6fd4;
+  --f0eg:#7c52d0;
+  --f0es:#2e9e62;
+  --xg1:#c47f0a;
+  --f0ej:#c0394a;
+  --radius:12px;
+  --radius-sm:8px;
+}
 html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;line-height:1.5}
 
 /* HEADER */
@@ -285,6 +315,9 @@ html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Pl
     <div class="hbadge hbadge-green">● Live</div>
     <div class="hbadge" id="hbadge-sync" style="display:none"></div>
     <div class="hbadge" id="hbadge-updated" style="display:none;color:var(--text3);border-color:var(--border);background:transparent;font-size:12px;font-weight:600"></div>
+    <div class="admin-btn" id="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark mode">
+      <i class="ti ti-sun" style="font-size:15px"></i>
+    </div>
     <a href="open_unc.bat" download="open_unc.bat" class="admin-btn" title="ดาวน์โหลด open_unc.bat แล้ว double-click เพื่อลงทะเบียน" style="text-decoration:none">
       <i class="ti ti-download" style="font-size:15px"></i> UNC Setup
     </a>
@@ -1115,6 +1148,24 @@ document.addEventListener('click', e => {
 });
 
 loadFromFirestore();
+
+// ===== THEME =====
+function toggleTheme() {
+  const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+  const next = isLight ? 'dark' : 'light';
+  applyTheme(next);
+  localStorage.setItem('theme', next);
+}
+function applyTheme(t) {
+  if (t === 'light') {
+    document.documentElement.setAttribute('data-theme', 'light');
+    document.getElementById('theme-toggle').innerHTML = '<i class="ti ti-moon" style="font-size:15px"></i>';
+  } else {
+    document.documentElement.removeAttribute('data-theme');
+    document.getElementById('theme-toggle').innerHTML = '<i class="ti ti-sun" style="font-size:15px"></i>';
+  }
+}
+applyTheme(localStorage.getItem('theme') || 'dark');
 
 // ===== ADMIN =====
 const CRED = {u:'admin', p:'meta1234'}; // ← change credentials here
