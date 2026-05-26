@@ -678,8 +678,16 @@ function srvChipHtml(ip) {
 }
 
 let activeChips = new Set(['all']);
+let activeSubmodel = null;
+
+function toggleSubmodel(name) {
+  activeSubmodel = (activeSubmodel === name) ? null : name;
+  updateModelSubnav();
+  renderSearch();
+}
 
 function toggleChip(val) {
+  activeSubmodel = null;
   if (val==='all') { activeChips = new Set(['all']); }
   else {
     activeChips.delete('all');
@@ -752,7 +760,9 @@ function onSearchInput() {
 
 function clearSearch() {
   document.getElementById('pn-search').value = '';
+  activeSubmodel = null;
   updateClearBtn();
+  updateModelSubnav();
   renderSearch();
 }
 
@@ -776,7 +786,11 @@ function updateModelSubnav() {
     const mc = MC[d.model] || {color:'var(--accent)'};
     const enc = encodeURIComponent(d.submodel);
     const lbl = d.submodel.replace(/&/g,'&amp;').replace(/</g,'&lt;');
-    return `<span class="rel-chip" style="border-color:${mc.color}33;color:${mc.color}" onclick="goRelated(decodeURIComponent('${enc}'))">${lbl}</span>`;
+    const on = activeSubmodel === d.submodel;
+    const style = on
+      ? `background:${mc.color};border-color:${mc.color};color:#fff`
+      : `border-color:${mc.color}44;color:${mc.color}`;
+    return `<span class="rel-chip" style="${style}" onclick="toggleSubmodel(decodeURIComponent('${enc}'))">${lbl}</span>`;
   }).join('');
   nav.style.display = 'block';
 }
@@ -789,6 +803,7 @@ function renderSearch() {
     if (!q) return true;
     return d.submodel.toLowerCase().includes(q) || d.pns.some(p => p.toLowerCase().includes(q));
   });
+  if (activeSubmodel) filtered = filtered.filter(d => d.submodel === activeSubmodel);
   if (doaOnly) filtered = filtered.filter(d => d.servers.some(ip => SERVERS[ip]?.doa));
   document.getElementById('search-count').textContent = filtered.length + ' result' + (filtered.length !== 1 ? 's' : '');
   const el = document.getElementById('search-results');
