@@ -136,6 +136,8 @@ html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Pl
 .pn-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
 .pn-tag{font-size:13px;font-weight:600;padding:4px 10px;background:var(--surface2);border-radius:6px;border:1px solid var(--border);color:var(--text2);font-family:'Plus Jakarta Sans',sans-serif}
 .pn-tag.hi{background:rgba(91,141,238,0.15);border-color:rgba(91,141,238,0.4);color:#a0bdf5}
+.pn-tag.has-path{border-color:rgba(76,175,125,0.6);color:var(--green);box-shadow:0 0 6px rgba(76,175,125,0.35)}
+.pn-tag.has-path:hover{border-color:var(--green);box-shadow:0 0 10px rgba(76,175,125,0.55)}
 .sm-related{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
 .rel-chip{font-size:11px;font-weight:700;padding:3px 9px;background:var(--surface3);border-radius:20px;border:1px solid var(--border);color:var(--text3);cursor:pointer;transition:all 0.15s;user-select:none}
 .rel-chip:hover{border-color:var(--accent);color:var(--accent)}
@@ -825,7 +827,7 @@ function renderSearch() {
           const path = d.pnPaths && d.pnPaths[pn];
           if (path) {
             const safeP = path.replace(/"/g, '&quot;');
-            return `<span class="pn-tag${hi ? ' hi' : ''}" data-path="${safeP}" style="cursor:pointer;position:relative">${pn}<i class="ti ti-folder" style="font-size:10px;margin-left:4px;opacity:0.55"></i><span class="copy-tip">กำลังเปิด folder...</span></span>`;
+            return `<span class="pn-tag has-path${hi ? ' hi' : ''}" data-path="${safeP}" style="cursor:pointer;position:relative">${pn}<span class="copy-tip">กำลังเปิด folder...</span></span>`;
           }
           return `<span class="pn-tag${hi ? ' hi' : ''}" data-copy="${pn}" style="cursor:pointer;position:relative">${pn}<span class="copy-tip">Copied!</span></span>`;
         }).join('');
