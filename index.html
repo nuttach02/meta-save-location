@@ -78,7 +78,7 @@ html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Pl
 .input-wrap input:focus ~ .input-icon{color:var(--accent)}
 .input-clear{position:absolute;right:14px;top:50%;transform:translateY(-50%);width:22px;height:22px;border-radius:50%;background:var(--surface3);border:none;cursor:pointer;display:none;align-items:center;justify-content:center;color:var(--text3);font-size:14px;transition:all 0.15s}
 .input-clear:hover{background:var(--border2);color:var(--text)}
-.model-subnav{display:none;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
+.model-subnav{display:none;margin-top:14px}
 .model-subnav-label{font-size:11px;font-weight:700;color:var(--text3);letter-spacing:1.2px;text-transform:uppercase;margin-bottom:8px}
 .model-subnav-chips{display:flex;flex-wrap:wrap;gap:6px}
 .row-between{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-top:16px;padding-top:16px;border-top:1px solid var(--border)}
@@ -313,10 +313,6 @@ html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Pl
         <i class="ti ti-search input-icon"></i>
         <button class="input-clear" id="search-clear" onclick="clearSearch()" title="Clear">✕</button>
       </div>
-      <div id="model-subnav" class="model-subnav">
-        <div class="model-subnav-label" id="model-subnav-label"></div>
-        <div class="model-subnav-chips" id="model-subnav-chips"></div>
-      </div>
       <div class="row-between">
         <div class="chips">
           <span class="chip-label">FILTER:</span>
@@ -329,6 +325,10 @@ html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Pl
           <div class="chip chip-doa"     id="chip-doa"  onclick="toggleDoa(this)">⚠ DOA</div>
         </div>
         <div class="result-count" id="search-count"></div>
+      </div>
+      <div id="model-subnav" class="model-subnav">
+        <div class="model-subnav-label" id="model-subnav-label"></div>
+        <div class="model-subnav-chips" id="model-subnav-chips"></div>
       </div>
     </div>
     <div id="search-results"></div>
@@ -409,6 +409,10 @@ html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Pl
     </div>
     <div class="form-group">
       <label class="form-label">Assigned Servers</label>
+      <div class="input-wrap" style="margin-bottom:8px">
+        <input type="text" id="srv-chk-filter" placeholder="Filter servers…" oninput="renderSrvChkPills()" style="font-size:13px;padding:9px 12px 9px 38px">
+        <i class="ti ti-filter input-icon" style="font-size:15px;left:12px"></i>
+      </div>
       <div class="chk-row" id="srv-chk-row"></div>
     </div>
     <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:18px">
@@ -748,16 +752,13 @@ function updateModelSubnav() {
   const label = document.getElementById('model-subnav-label');
   const chipsEl = document.getElementById('model-subnav-chips');
   if (!nav) return;
-  if (activeChips.has('all') || activeChips.size !== 1) {
-    nav.style.display = 'none';
-    return;
-  }
-  const model = [...activeChips][0].toUpperCase();
-  const subs = DATA.filter(d => d.model.toLowerCase() === model.toLowerCase());
+  if (activeChips.has('all')) { nav.style.display = 'none'; return; }
+  const models = [...activeChips].map(m => m.toUpperCase());
+  const subs = DATA.filter(d => models.includes(d.model));
   if (!subs.length) { nav.style.display = 'none'; return; }
-  const mc = MC[model] || {color:'var(--accent)'};
-  label.textContent = model + ' — ALL SUBMODELS';
+  label.textContent = models.join(' + ') + ' — ALL SUBMODELS';
   chipsEl.innerHTML = subs.map(d => {
+    const mc = MC[d.model] || {color:'var(--accent)'};
     const enc = encodeURIComponent(d.submodel);
     const lbl = d.submodel.replace(/&/g,'&amp;').replace(/</g,'&lt;');
     return `<span class="rel-chip" style="border-color:${mc.color}33;color:${mc.color}" onclick="goRelated(decodeURIComponent('${enc}'))">${lbl}</span>`;
@@ -1128,23 +1129,32 @@ function refreshPnTags() {
 }
 
 // --- Server checkboxes ---
+let srvChkSel = new Set();
 function buildSrvChk(selected) {
-  document.getElementById('srv-chk-row').innerHTML = Object.keys(SERVERS).map(ip => {
-    const s = SERVERS[ip];
-    const chk = selected.includes(ip);
-    return `<div class="chk-pill${chk ? ' checked' : ''}" id="chk-${ip.replace(/\./g,'_')}" onclick="toggleSrvChk('${ip}')">
-      <i class="ti ${srvTypeIcon(s.type)}" style="font-size:12px"></i>${ip}
-    </div>`;
-  }).join('');
+  srvChkSel = new Set(selected);
+  const fi = document.getElementById('srv-chk-filter');
+  if (fi) fi.value = '';
+  renderSrvChkPills();
+}
+function renderSrvChkPills() {
+  const q = (document.getElementById('srv-chk-filter')?.value || '').toLowerCase().trim();
+  document.getElementById('srv-chk-row').innerHTML = Object.keys(SERVERS)
+    .filter(ip => !q || ip.includes(q))
+    .map(ip => {
+      const s = SERVERS[ip];
+      const chk = srvChkSel.has(ip);
+      return `<div class="chk-pill${chk ? ' checked' : ''}" id="chk-${ip.replace(/\./g,'_')}" onclick="toggleSrvChk('${ip}')">
+        <i class="ti ${srvTypeIcon(s.type)}" style="font-size:12px"></i>${ip}
+      </div>`;
+    }).join('');
 }
 function toggleSrvChk(ip) {
-  document.getElementById('chk-' + ip.replace(/\./g, '_')).classList.toggle('checked');
+  srvChkSel.has(ip) ? srvChkSel.delete(ip) : srvChkSel.add(ip);
+  const el = document.getElementById('chk-' + ip.replace(/\./g, '_'));
+  if (el) el.classList.toggle('checked', srvChkSel.has(ip));
 }
 function getCheckedSrvs() {
-  return Object.keys(SERVERS).filter(ip => {
-    const el = document.getElementById('chk-' + ip.replace(/\./g, '_'));
-    return el && el.classList.contains('checked');
-  });
+  return [...srvChkSel];
 }
 
 // --- Submodel modal ---
