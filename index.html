@@ -435,8 +435,8 @@ html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Pl
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
       <div class="form-group">
         <label class="form-label">Type</label>
-        <select class="form-ctrl" id="srv-type" style="appearance:none;cursor:pointer">
-          <option>Monitor</option><option>PXE</option><option>Log</option>
+        <select class="form-ctrl" id="srv-type" style="cursor:pointer">
+          <option>Monitor</option><option>PXE</option><option>PXE02</option><option>PXE03</option><option>PXE04</option><option>PXE05</option><option>Log</option>
         </select>
       </div>
       <div class="form-group">
@@ -476,6 +476,10 @@ html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Pl
       <div class="admin-sec-head">
         <div class="admin-sec-ttl">Submodels</div>
         <button class="btn btn-primary btn-sm" onclick="openSmAdd()"><i class="ti ti-plus"></i> Add Submodel</button>
+      </div>
+      <div class="input-wrap" style="margin-bottom:14px">
+        <input type="text" id="admin-sm-search" placeholder="Search submodel or model…" oninput="renderAdminSm()" style="font-size:13px;padding:10px 14px 10px 42px">
+        <i class="ti ti-search input-icon" style="font-size:16px"></i>
       </div>
       <table class="atable">
         <thead><tr><th>Model</th><th>Submodel</th><th>PNs</th><th>Servers</th><th>Actions</th></tr></thead>
@@ -648,10 +652,16 @@ function getLocs(servers) {
 }
 
 function srvTypeClass(type) {
-  return {Monitor:'sc-monitor', PXE:'sc-pxe', Log:'sc-log'}[type] || 'sc-monitor';
+  if (type === 'Log') return 'sc-log';
+  if (type && type.startsWith('PXE')) return 'sc-pxe';
+  if (type === 'Monitor') return 'sc-monitor';
+  return 'sc-monitor';
 }
 function srvTypeIcon(type) {
-  return {Monitor:'ti-eye', PXE:'ti-wifi', Log:'ti-file-text'}[type] || 'ti-server';
+  if (type === 'Log') return 'ti-file-text';
+  if (type && type.startsWith('PXE')) return 'ti-wifi';
+  if (type === 'Monitor') return 'ti-eye';
+  return 'ti-server';
 }
 
 function srvChipHtml(ip) {
@@ -915,22 +925,28 @@ function renderServerMap() {
     PXE:     {color:'#e8a838', bg:'rgba(232,168,56,0.10)',  border:'rgba(232,168,56,0.35)',  icon:'ti-wifi'},
     Log:     {color:'#4caf7d', bg:'rgba(76,175,125,0.10)', border:'rgba(76,175,125,0.35)', icon:'ti-file-text'},
   };
+  const getTC = t => TC[t] || (t && t.startsWith('PXE') ? TC['PXE'] : TC['Monitor']);
+  const TYPE_ORDER = ['Monitor','PXE','PXE02','PXE03','PXE04','PXE05','Log'];
 
   // Build: building → floor → type → [{ip, doa}]
   const bldgMap = new Map();
   Object.entries(SERVERS).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([ip, s]) => {
     if (!bldgMap.has(s.building)) bldgMap.set(s.building, new Map());
     const floorMap = bldgMap.get(s.building);
-    if (!floorMap.has(s.floor)) floorMap.set(s.floor, {Monitor:[], PXE:[], Log:[]});
+    if (!floorMap.has(s.floor)) floorMap.set(s.floor, {});
     (floorMap.get(s.floor)[s.type] = floorMap.get(s.floor)[s.type] || []).push({ip, doa:!!s.doa});
   });
 
   const html = [...bldgMap.entries()].sort((a,b)=>a[0].localeCompare(b[0])).map(([bldg, floorMap], bi) => {
     const floorsHtml = [...floorMap.entries()].sort((a,b)=>a[0].localeCompare(b[0])).map(([floor, typeData]) => {
-      const cardsHtml = ['Monitor','PXE','Log'].map(type => {
+      const orderedTypes = Object.keys(typeData).sort((a,b) => {
+        const ai = TYPE_ORDER.indexOf(a), bi = TYPE_ORDER.indexOf(b);
+        return (ai<0?99:ai)-(bi<0?99:bi);
+      });
+      const cardsHtml = orderedTypes.map(type => {
         const srvs = typeData[type] || [];
         if (!srvs.length) return '';
-        const tc = TC[type];
+        const tc = getTC(type);
         const ipsHtml = srvs.map(s => `
           <div class="fc-ip-row" data-copy="${s.ip}" style="cursor:pointer;position:relative">
             <div class="fc-ip-dot" style="background:${tc.color}"></div>
@@ -1072,7 +1088,10 @@ function switchATab(tab) {
   if (tab==='servers') renderAdminSrv();
 }
 function renderAdminSm() {
-  document.getElementById('admin-sm-tbody').innerHTML = DATA.map((d, i) => {
+  const q = (document.getElementById('admin-sm-search')?.value || '').toLowerCase().trim();
+  document.getElementById('admin-sm-tbody').innerHTML = DATA.map((d, i) => ({d, i}))
+    .filter(({d}) => !q || d.model.toLowerCase().includes(q) || d.submodel.toLowerCase().includes(q))
+    .map(({d, i}) => {
     const mc = MC[d.model];
     return `<tr>
       <td><span style="background:${mc.soft};color:${mc.color};border:1.5px solid ${mc.color}55;padding:3px 10px;border-radius:5px;font-size:12px;font-weight:800">${d.model}</span></td>
