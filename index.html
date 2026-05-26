@@ -320,9 +320,7 @@ html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Pl
     <div class="hbadge" id="hbadge-sync" style="display:none"></div>
     <div class="hbadge" id="hbadge-updated" style="display:none;color:var(--text3);border-color:var(--border);background:transparent;font-size:12px;font-weight:600"></div>
     <div class="admin-btn" id="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark mode" style="font-size:16px;letter-spacing:0">☀</div>
-    <a href="open_unc.bat" download="open_unc.bat" class="admin-btn" title="ดาวน์โหลด open_unc.bat แล้ว double-click เพื่อลงทะเบียน" style="text-decoration:none">
-      <i class="ti ti-download" style="font-size:15px"></i> UNC Setup
-    </a>
+    <div class="admin-btn" onclick="openHowto()" title="วิธีใช้งาน UNC Path" style="font-weight:800">? UNC</div>
     <div class="admin-btn" id="admin-lock" onclick="handleAdminBtn()">
       <i class="ti ti-lock" style="font-size:15px"></i> Admin
     </div>
@@ -404,6 +402,51 @@ html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Pl
     <div id="map-content"></div>
   </div>
 
+</div>
+
+<!-- HOW TO USE MODAL -->
+<div id="howto-modal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeHowto()">
+  <div class="modal-box" style="max-width:480px">
+    <div class="modal-title" style="display:flex;align-items:center;justify-content:space-between">
+      <span><i class="ti ti-info-circle" style="color:var(--accent)"></i> วิธีใช้งาน UNC Path</span>
+      <span onclick="closeHowto()" style="cursor:pointer;color:var(--text3);font-size:20px;line-height:1;font-weight:400">&times;</span>
+    </div>
+    <div class="modal-sub" style="margin-bottom:18px">ติดตั้งครั้งเดียวต่อเครื่อง เพื่อให้คลิก IP แล้วเปิด File Explorer ได้เลย</div>
+    <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:22px">
+      <div style="display:flex;gap:14px;align-items:flex-start">
+        <div style="width:28px;height:28px;border-radius:50%;background:var(--accent-soft);border:1.5px solid rgba(91,141,238,0.4);color:var(--accent);font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0">1</div>
+        <div>
+          <div style="font-weight:700;color:var(--text);margin-bottom:4px">ดาวน์โหลดไฟล์</div>
+          <div style="font-size:13px;color:var(--text2);margin-bottom:8px">กดปุ่มด้านล่างเพื่อดาวน์โหลด <code style="background:var(--surface2);padding:1px 6px;border-radius:4px;font-size:12px">open_unc.bat</code></div>
+          <a href="open_unc.bat" download="open_unc.bat" style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;background:var(--accent-soft);border:1px solid rgba(91,141,238,0.4);color:var(--accent);border-radius:7px;font-size:13px;font-weight:700;text-decoration:none"><i class="ti ti-download"></i> ดาวน์โหลด open_unc.bat</a>
+        </div>
+      </div>
+      <div style="display:flex;gap:14px;align-items:flex-start">
+        <div style="width:28px;height:28px;border-radius:50%;background:var(--accent-soft);border:1.5px solid rgba(91,141,238,0.4);color:var(--accent);font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0">2</div>
+        <div>
+          <div style="font-weight:700;color:var(--text);margin-bottom:4px">Double-click เพื่อลงทะเบียน</div>
+          <div style="font-size:13px;color:var(--text2)">รันไฟล์ <code style="background:var(--surface2);padding:1px 6px;border-radius:4px;font-size:12px">open_unc.bat</code> บนเครื่อง Windows — จะเปิด Command Prompt สั้นๆ แล้วปิดเอง ไม่ต้องรีสตาร์ท</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:14px;align-items:flex-start">
+        <div style="width:28px;height:28px;border-radius:50%;background:rgba(76,175,125,0.12);border:1.5px solid rgba(76,175,125,0.4);color:var(--green);font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0">&#10003;</div>
+        <div>
+          <div style="font-weight:700;color:var(--text);margin-bottom:4px">พร้อมใช้งาน</div>
+          <div style="font-size:13px;color:var(--text2)">คลิก IP ในระบบได้เลย — File Explorer จะเปิด <code style="background:var(--surface2);padding:1px 6px;border-radius:4px;font-size:12px">\\IP</code> ทันที</div>
+        </div>
+      </div>
+    </div>
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--text3);display:flex;gap:8px;align-items:flex-start;margin-bottom:20px">
+      <i class="ti ti-alert-circle" style="flex-shrink:0;margin-top:1px"></i>
+      ลงทะเบียนแค่ครั้งเดียวต่อ Windows user account ไม่ต้องติดตั้งซ้ำทุกครั้งที่เปิดเว็บ
+    </div>
+    <div style="display:flex;gap:10px;align-items:center">
+      <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:13px;color:var(--text2);flex:1">
+        <input type="checkbox" id="howto-no-show" style="accent-color:var(--accent)"> ไม่ต้องแสดงอีก
+      </label>
+      <button class="btn-primary" onclick="closeHowto()">เข้าใจแล้ว</button>
+    </div>
+  </div>
 </div>
 
 <!-- LOGIN MODAL -->
@@ -1147,6 +1190,18 @@ document.addEventListener('click', e => {
 
 subscribeFirestore();
 
+// ===== HOW TO USE =====
+function openHowto() {
+  document.getElementById('howto-modal').style.display = 'flex';
+}
+function closeHowto() {
+  const modal = document.getElementById('howto-modal');
+  modal.style.display = 'none';
+  if (document.getElementById('howto-no-show').checked) {
+    localStorage.setItem('unc_howto_seen', '1');
+  }
+}
+
 // ===== THEME =====
 function toggleTheme() {
   const isLight = document.documentElement.getAttribute('data-theme') === 'light';
@@ -1164,6 +1219,7 @@ function applyTheme(t) {
   }
 }
 applyTheme(localStorage.getItem('theme') || 'dark');
+if (!localStorage.getItem('unc_howto_seen')) { openHowto(); }
 
 // ===== ADMIN =====
 const CRED = {u:'admin', p:'meta1234'}; // ← change credentials here
