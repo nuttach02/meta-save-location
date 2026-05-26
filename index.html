@@ -310,7 +310,7 @@ html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Pl
     <div class="search-card">
       <div class="search-title"><i class="ti ti-search"></i> Search by Model Name or Part Number</div>
       <div class="input-wrap">
-        <input type="text" id="pn-search" placeholder="Type a PN like  33F0SMA00V0  or model like  F0S Medusa" oninput="onSearchInput()">
+        <input type="text" id="pn-search" placeholder="Type a PN like  33F0SMA00V0  or model like  F0S Medusa" oninput="onSearchInput()" autocomplete="off">
         <i class="ti ti-search input-icon"></i>
         <button class="input-clear" id="search-clear" onclick="clearSearch()" title="Clear">✕</button>
       </div>
@@ -370,11 +370,11 @@ html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Pl
     <div class="modal-sub">Enter your credentials to manage data</div>
     <div class="form-group">
       <label class="form-label">Username</label>
-      <input type="text" class="form-ctrl" id="login-user" placeholder="Username" onkeydown="if(event.key==='Enter')doLogin()">
+      <input type="text" class="form-ctrl" id="login-user" placeholder="Username" autocomplete="username" onkeydown="if(event.key==='Enter')doLogin()">
     </div>
     <div class="form-group">
       <label class="form-label">Password</label>
-      <input type="password" class="form-ctrl" id="login-pass" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()">
+      <input type="password" class="form-ctrl" id="login-pass" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
     </div>
     <div class="login-err" id="login-err">Incorrect username or password</div>
     <div style="display:flex;gap:10px;justify-content:flex-end">
