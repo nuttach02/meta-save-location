@@ -8,5 +8,5 @@ if "%~1"=="" (
     echo now click ip in web 
     pause
 ) else (
-    powershell -noprofile -windowstyle hidden -command "$ip='%~1' -replace 'openunc:[/]*',''; explorer.exe ('\\' + $ip)"
+    powershell -noprofile -windowstyle hidden -command "$p='%~1' -replace 'openunc:[/]*',''; $p='\\' + ($p -replace '/','\'); Start-Process $p"
 )

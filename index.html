@@ -408,6 +408,10 @@ html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Pl
         <input class="tag-input-el" id="pn-ti" placeholder="Type PN and press Enter…" onkeydown="pnKeydown(event)" oninput="pnInputChk(event)">
       </div>
     </div>
+    <div class="form-group" id="pn-paths-section" style="display:none">
+      <label class="form-label">PN Folder Paths &nbsp;<span style="color:var(--text3);font-weight:400;font-size:10px;text-transform:none;letter-spacing:0">optional — คลิก PN แล้วเปิด folder</span></label>
+      <div id="pn-paths-rows"></div>
+    </div>
     <div class="form-group">
       <label class="form-label">Assigned Servers</label>
       <div class="input-wrap" style="margin-bottom:8px">
@@ -818,6 +822,11 @@ function renderSearch() {
         const mc = MC[d.model];
         const pnHtml = d.pns.map(pn => {
           const hi = q && pn.toLowerCase().includes(q);
+          const path = d.pnPaths && d.pnPaths[pn];
+          if (path) {
+            const safeP = path.replace(/"/g, '&quot;');
+            return `<span class="pn-tag${hi ? ' hi' : ''}" data-path="${safeP}" style="cursor:pointer;position:relative">${pn}<i class="ti ti-folder" style="font-size:10px;margin-left:4px;opacity:0.55"></i><span class="copy-tip">กำลังเปิด folder...</span></span>`;
+          }
           return `<span class="pn-tag${hi ? ' hi' : ''}" data-copy="${pn}" style="cursor:pointer;position:relative">${pn}<span class="copy-tip">Copied!</span></span>`;
         }).join('');
         return `<div class="sm-row">
@@ -1044,6 +1053,12 @@ function copyText(text, el) {
   tip.classList.add('show');
   setTimeout(() => tip.classList.remove('show'), 1400);
 }
+function openPNPath(path, el) {
+  const normalized = path.replace(/^\\\\/, '').replace(/\\/g, '/');
+  window.location.href = 'openunc:' + normalized;
+  const tip = el.querySelector('.copy-tip');
+  if (tip) { tip.classList.add('show'); setTimeout(() => tip.classList.remove('show'), 2000); }
+}
 function copyUNC(ip, el) {
   window.location.href = 'openunc:' + ip;
   const tip = el.querySelector('.copy-tip');
@@ -1052,6 +1067,8 @@ function copyUNC(ip, el) {
   setTimeout(() => tip.classList.remove('show'), 2000);
 }
 document.addEventListener('click', e => {
+  const pnPath = e.target.closest('.pn-tag[data-path]');
+  if (pnPath) { openPNPath(pnPath.dataset.path, pnPath); return; }
   const pn = e.target.closest('.pn-tag[data-copy]');
   if (pn) { copyText(pn.dataset.copy, pn); return; }
   const chip = e.target.closest('.srv-chip[data-open]');
@@ -1066,6 +1083,7 @@ loadFromFirestore();
 const CRED = {u:'admin', p:'meta1234'}; // ← change credentials here
 let adminLoggedIn = false;
 let pnTags = [];
+let pnPaths = {};
 
 function handleAdminBtn() {
   if (adminLoggedIn) { openAdmin(); }
@@ -1179,6 +1197,22 @@ function refreshPnTags() {
     wrap.appendChild(el);
   });
   wrap.appendChild(input);
+  refreshPnPaths();
+}
+function refreshPnPaths() {
+  const sec = document.getElementById('pn-paths-section');
+  const rows = document.getElementById('pn-paths-rows');
+  if (!sec || !rows) return;
+  if (!pnTags.length) { sec.style.display = 'none'; return; }
+  sec.style.display = 'block';
+  rows.innerHTML = pnTags.map(pn => {
+    const val = (pnPaths[pn] || '').replace(/"/g, '&quot;');
+    return `<div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
+      <span style="font-family:monospace;font-size:12px;font-weight:700;color:var(--text2);min-width:150px;flex-shrink:0">${pn}</span>
+      <input type="text" class="form-ctrl" style="font-size:12px;padding:7px 10px" placeholder="\\\\server\\share\\folder"
+        value="${val}" oninput="pnPaths['${pn}']=this.value.trim()">
+    </div>`;
+  }).join('');
 }
 
 // --- Server checkboxes ---
@@ -1213,6 +1247,7 @@ function getCheckedSrvs() {
 // --- Submodel modal ---
 function openSmAdd() {
   pnTags = [];
+  pnPaths = {};
   document.getElementById('sm-modal-title').innerHTML = '<i class="ti ti-plus"></i> Add Submodel';
   document.getElementById('sm-edit-idx').value = '-1';
   document.getElementById('sm-model').value = 'F0S';
@@ -1225,6 +1260,7 @@ function openSmAdd() {
 function openSmEdit(i) {
   const d = DATA[i];
   pnTags = [...d.pns];
+  pnPaths = {...(d.pnPaths || {})};
   document.getElementById('sm-modal-title').innerHTML = '<i class="ti ti-edit"></i> Edit Submodel';
   document.getElementById('sm-edit-idx').value = i;
   document.getElementById('sm-model').value = d.model;
@@ -1237,11 +1273,14 @@ function closeSmModal() { document.getElementById('sm-modal').style.display = 'n
 function saveSmModal() {
   const remain = document.getElementById('pn-ti').value.trim();
   if (remain) addPnTag(remain);
+  const filteredPaths = {};
+  pnTags.forEach(pn => { if (pnPaths[pn]) filteredPaths[pn] = pnPaths[pn]; });
   const entry = {
     model: document.getElementById('sm-model').value,
     submodel: document.getElementById('sm-name').value.trim(),
     pns: [...pnTags],
-    servers: getCheckedSrvs()
+    servers: getCheckedSrvs(),
+    pnPaths: filteredPaths
   };
   if (!entry.submodel) { alert('Submodel name is required'); return; }
   const idx = parseInt(document.getElementById('sm-edit-idx').value);
