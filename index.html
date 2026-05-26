@@ -6,6 +6,8 @@
 <title>META Save Location System</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -49,6 +51,7 @@ html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Pl
 .hbadge{padding:5px 14px;border-radius:20px;font-size:13px;font-weight:700;border:1px solid}
 .hbadge-blue{color:var(--accent);border-color:rgba(91,141,238,0.4);background:var(--accent-soft)}
 .hbadge-green{color:var(--green);border-color:rgba(76,175,125,0.4);background:var(--green-soft)}
+.hbadge-amber{color:var(--amber);border-color:rgba(232,168,56,0.4);background:var(--amber-soft)}
 
 /* NAV */
 .nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 32px;display:flex;gap:4px}
@@ -269,6 +272,7 @@ html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Pl
   <div class="header-badges">
     <div class="hbadge hbadge-blue">META</div>
     <div class="hbadge hbadge-green">● Live</div>
+    <div class="hbadge" id="hbadge-sync" style="display:none"></div>
     <div class="hbadge" id="hbadge-updated" style="display:none;color:var(--text3);border-color:var(--border);background:transparent;font-size:12px;font-weight:600"></div>
     <div class="admin-btn" id="admin-lock" onclick="handleAdminBtn()">
       <i class="ti ti-lock" style="font-size:15px"></i> Admin
@@ -487,6 +491,20 @@ const MC = {
   'F0EJ': {color:'#e05c6a', soft:'rgba(224,92,106,0.15)',  text:'#fff'},
 };
 
+// ===== FIREBASE CONFIG — แทนที่ด้วยค่าจริงจาก Firebase Console =====
+const firebaseConfig = {
+  apiKey:            'YOUR_API_KEY',
+  authDomain:        'YOUR_PROJECT_ID.firebaseapp.com',
+  projectId:         'YOUR_PROJECT_ID',
+  storageBucket:     'YOUR_PROJECT_ID.appspot.com',
+  messagingSenderId: 'YOUR_SENDER_ID',
+  appId:             'YOUR_APP_ID',
+};
+firebase.initializeApp(firebaseConfig);
+const db  = firebase.firestore();
+const DOC = db.collection('app_state').doc('config');
+// ======================================================================
+
 const DEFAULT_SERVERS = {
   '10.94.94.30':   {type:'Monitor', building:'F7',  floor:'3F'},
   '10.94.94.121':  {type:'Monitor', building:'F7',  floor:'3F'},
@@ -536,15 +554,64 @@ const DEFAULT_DATA = [
   {model:'F0EJ',submodel:'F0EJ BB',           pns:['39F0EBA00A0','39F0EBA0110','39F0EBA01J0','39F0EBA01P0'], servers:['10.94.165.100','10.94.165.86']},
 ];
 
-let SERVERS = JSON.parse(localStorage.getItem('meta_servers') || 'null') || JSON.parse(JSON.stringify(DEFAULT_SERVERS));
-let DATA    = JSON.parse(localStorage.getItem('meta_data')    || 'null') || JSON.parse(JSON.stringify(DEFAULT_DATA));
+let SERVERS = JSON.parse(JSON.stringify(DEFAULT_SERVERS));
+let DATA    = JSON.parse(JSON.stringify(DEFAULT_DATA));
 
-function saveData() {
-  localStorage.setItem('meta_servers', JSON.stringify(SERVERS));
-  localStorage.setItem('meta_data', JSON.stringify(DATA));
-  localStorage.setItem('meta_updated', new Date().toISOString());
+async function saveData() {
+  showSyncBadge('syncing');
+  try {
+    await pushToFirestore();
+    localStorage.setItem('meta_updated', new Date().toISOString());
+    showSyncBadge('ok');
+  } catch(e) {
+    console.warn('Firestore save failed:', e);
+    showSyncBadge('offline');
+  }
   updateTimestamp();
   renderSearch();
+}
+
+async function pushToFirestore() {
+  await DOC.set({
+    servers:    SERVERS,
+    submodels:  DATA,
+    updated_at: firebase.firestore.FieldValue.serverTimestamp()
+  });
+}
+
+async function loadFromFirestore() {
+  showSyncBadge('syncing');
+  try {
+    const snap = await DOC.get();
+    if (snap.exists) {
+      const d = snap.data();
+      if (d.servers)   SERVERS = d.servers;
+      if (d.submodels) DATA    = d.submodels;
+    } else {
+      await pushToFirestore();
+    }
+    showSyncBadge('ok');
+  } catch(e) {
+    console.warn('Firestore load failed, using defaults:', e);
+    showSyncBadge('offline');
+  }
+  updateTimestamp();
+  renderSearch();
+}
+
+function showSyncBadge(state) {
+  const el = document.getElementById('hbadge-sync');
+  if (!el) return;
+  const map = {
+    syncing: {text:'⟳ Syncing…', cls:'hbadge-blue'},
+    ok:      {text:'✓ Synced',   cls:'hbadge-green'},
+    offline: {text:'⚠ Offline', cls:'hbadge-amber'},
+  };
+  const s = map[state];
+  el.textContent   = s.text;
+  el.className     = 'hbadge ' + s.cls;
+  el.style.display = '';
+  if (state === 'ok') setTimeout(() => { el.style.display = 'none'; }, 2500);
 }
 
 function updateTimestamp() {
@@ -896,8 +963,7 @@ document.addEventListener('click', e => {
   if (row) { copyText(row.dataset.copy, row); return; }
 });
 
-updateTimestamp();
-renderSearch();
+loadFromFirestore();
 
 // ===== ADMIN =====
 const CRED = {u:'admin', p:'meta1234'}; // ← change credentials here
