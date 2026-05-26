@@ -124,8 +124,8 @@ html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Pl
 .chip-f0s.on{background:var(--f0s);color:#fff}
 .chip-f0eg.on{background:var(--f0eg);color:#fff}
 .chip-f0es.on{background:var(--f0es);color:#fff}
-.chip-xg1.on{background:var(--f0ej);color:#fff}
-.chip-f0ej.on{background:var(--red);color:#fff}
+.chip-xg1.on{background:var(--xg1);color:#fff}
+.chip-f0ej.on{background:var(--f0ej);color:#fff}
 .chip-doa.on{background:var(--red);color:#fff;border-color:transparent}
 
 /* RESULT CARDS GRID */
@@ -1005,11 +1005,11 @@ function renderOverview() {
   const totalSrv = Object.keys(SERVERS).length;
   const buildings = [...new Set(Object.values(SERVERS).map(s=>s.building))];
   const stats = `<div class="stats-grid">
-    <div class="stat-box" style="animation-delay:0.2s"><div class="stat-num" style="color:#e8a838">${buildings.length}</div><div class="stat-lbl">Buildings</div></div>
-    <div class="stat-box" style="animation-delay:0s"><div class="stat-num" style="color:#5b8dee">5</div><div class="stat-lbl">Models</div></div>
-    <div class="stat-box" style="animation-delay:0.05s"><div class="stat-num" style="color:#9b72e8">${DATA.length}</div><div class="stat-lbl">Submodels</div></div>
-    <div class="stat-box" style="animation-delay:0.1s"><div class="stat-num" style="color:#4caf7d">${totalPNs}</div><div class="stat-lbl">Part Nos</div></div>
-    <div class="stat-box" style="animation-delay:0.15s"><div class="stat-num" style="color:#4a5270">${totalSrv}</div><div class="stat-lbl">Servers</div></div>
+    <div class="stat-box" style="animation-delay:0s"><div class="stat-num" style="color:#e8a838">${buildings.length}</div><div class="stat-lbl">Buildings</div></div>
+    <div class="stat-box" style="animation-delay:0.05s"><div class="stat-num" style="color:#5b8dee">5</div><div class="stat-lbl">Models</div></div>
+    <div class="stat-box" style="animation-delay:0.1s"><div class="stat-num" style="color:#9b72e8">${DATA.length}</div><div class="stat-lbl">Submodels</div></div>
+    <div class="stat-box" style="animation-delay:0.15s"><div class="stat-num" style="color:#4caf7d">${totalPNs}</div><div class="stat-lbl">Part Nos</div></div>
+    <div class="stat-box" style="animation-delay:0.2s"><div class="stat-num" style="color:#4a5270">${totalSrv}</div><div class="stat-lbl">Servers</div></div>
     
   </div>`;
   const byBuilding = groupByBuilding(buildLocMap(DATA));
