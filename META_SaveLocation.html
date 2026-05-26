@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>META Save Location System</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#1c1f26;
+  --surface:#252830;
+  --surface2:#2d3140;
+  --surface3:#343848;
+  --accent:#5b8dee;
+  --accent-soft:rgba(91,141,238,0.15);
+  --green:#4caf7d;
+  --green-soft:rgba(76,175,125,0.15);
+  --amber:#e8a838;
+  --amber-soft:rgba(232,168,56,0.12);
+  --red:#e05c6a;
+  --red-soft:rgba(224,92,106,0.15);
+  --purple:#9b72e8;
+  --purple-soft:rgba(155,114,232,0.15);
+  --teal:#38bfb0;
+  --teal-soft:rgba(56,191,176,0.15);
+  --text:#e8eaf0;
+  --text2:#9ea8bc;
+  --text3:#6b7590;
+  --border:#363c4e;
+  --border2:#424860;
+  --f0s:#5b8dee;
+  --f0eg:#9b72e8;
+  --f0es:#4caf7d;
+  --xg1:#e8a838;
+  --f0ej:#e05c6a;
+  --radius:12px;
+  --radius-sm:8px;
+}
+html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;line-height:1.5}
+
+/* HEADER */
+.header{background:var(--surface);border-bottom:1px solid var(--border);padding:18px 32px;display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:100}
+.logo-icon{width:46px;height:46px;border-radius:var(--radius-sm);background:var(--accent-soft);border:1px solid rgba(91,141,238,0.3);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo-title{font-size:20px;font-weight:800;color:var(--text);letter-spacing:0.5px}
+.logo-sub{font-size:13px;color:var(--text2);font-weight:500;margin-top:1px}
+.header-badges{margin-left:auto;display:flex;gap:8px;align-items:center}
+.hbadge{padding:5px 14px;border-radius:20px;font-size:13px;font-weight:700;border:1px solid}
+.hbadge-blue{color:var(--accent);border-color:rgba(91,141,238,0.4);background:var(--accent-soft)}
+.hbadge-green{color:var(--green);border-color:rgba(76,175,125,0.4);background:var(--green-soft)}
+
+/* NAV */
+.nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 32px;display:flex;gap:4px}
+.nav-tab{padding:15px 22px;font-size:14px;font-weight:700;cursor:pointer;transition:all 0.2s;border-bottom:3px solid transparent;color:var(--text3);display:flex;align-items:center;gap:8px;letter-spacing:0.2px}
+.nav-tab:hover{color:var(--text2)}
+.nav-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.nav-tab i{font-size:18px}
+
+/* MAIN */
+.main{padding:28px 32px;max-width:1400px;margin:0 auto}
+.panel{display:none;animation:fadeup 0.3s ease}
+.panel.active{display:block}
+@keyframes fadeup{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* SEARCH BOX */
+.search-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:24px}
+.search-title{font-size:13px;font-weight:700;color:var(--text2);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.search-title i{font-size:16px;color:var(--accent)}
+.input-wrap{position:relative}
+.input-wrap input{width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:14px 16px 14px 50px;color:var(--text);font-size:16px;font-weight:500;font-family:'Plus Jakarta Sans',sans-serif;outline:none;transition:all 0.25s}
+.input-wrap input::placeholder{color:var(--text3)}
+.input-wrap input:focus{border-color:var(--accent);background:var(--surface3)}
+.input-icon{position:absolute;left:16px;top:50%;transform:translateY(-50%);font-size:20px;color:var(--text3);transition:color 0.25s;pointer-events:none}
+.input-wrap input:focus ~ .input-icon{color:var(--accent)}
+.row-between{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-top:16px;padding-top:16px;border-top:1px solid var(--border)}
+.result-count{font-size:14px;font-weight:600;color:var(--text2)}
+
+/* FILTER CHIPS */
+.chips{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.chip-label{font-size:13px;font-weight:700;color:var(--text3);letter-spacing:0.5px;margin-right:4px}
+.chip{padding:7px 18px;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s;border:1.5px solid var(--border);color:var(--text2);background:var(--surface2);user-select:none}
+.chip:hover{border-color:var(--border2);color:var(--text)}
+.chip.on{border-color:transparent}
+.chip-all.on{background:var(--accent);color:#fff}
+.chip-f0s.on{background:var(--f0s);color:#fff}
+.chip-f0eg.on{background:var(--f0eg);color:#fff}
+.chip-f0es.on{background:var(--f0es);color:#fff}
+.chip-xg1.on{background:var(--f0ej);color:#fff}
+.chip-f0ej.on{background:var(--red);color:#fff}
+.chip-doa.on{background:var(--red);color:#fff;border-color:transparent}
+
+/* RESULT CARDS GRID */
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px}
+
+/* CARD */
+.rcard{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:all 0.25s;animation:fadeup 0.35s ease both}
+.rcard:hover{border-color:var(--border2);box-shadow:0 6px 28px rgba(0,0,0,0.25);transform:translateY(-2px)}
+.rcard-head{padding:16px 18px;display:flex;align-items:center;gap:10px;background:var(--surface2);border-bottom:1px solid var(--border)}
+.mbadge{padding:5px 12px;border-radius:6px;font-size:13px;font-weight:800;letter-spacing:0.5px;flex-shrink:0}
+.submodel-name{font-size:15px;font-weight:700;color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pn-count-badge{font-size:12px;font-weight:700;color:var(--text3);background:var(--surface3);padding:3px 9px;border-radius:20px;white-space:nowrap}
+
+.rcard-body{padding:16px 18px}
+
+/* LOCATION ROW */
+.loc-block{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:13px 16px;margin-bottom:12px;display:flex;align-items:center;gap:14px}
+.loc-icon-wrap{width:38px;height:38px;border-radius:8px;background:var(--purple-soft);border:1px solid rgba(155,114,232,0.25);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.loc-icon-wrap i{color:var(--purple);font-size:20px}
+.loc-pills{display:flex;gap:6px;flex-wrap:wrap}
+.lpill{padding:5px 12px;border-radius:6px;font-size:13px;font-weight:700;display:flex;align-items:center;gap:5px}
+.lpill i{font-size:14px}
+.lpill-b{background:var(--amber-soft);color:var(--amber);border:1px solid rgba(232,168,56,0.3)}
+.lpill-f{background:var(--accent-soft);color:var(--accent);border:1px solid rgba(91,141,238,0.3)}
+.lpill-l{background:var(--teal-soft);color:var(--teal);border:1px solid rgba(56,191,176,0.3)}
+.lpill-doa{background:var(--red-soft);color:var(--red);border:1px solid rgba(224,92,106,0.3)}
+
+/* SERVER CHIPS */
+.section-mini-title{font-size:12px;font-weight:700;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px;margin-top:14px}
+.srv-chips{display:flex;flex-wrap:wrap;gap:6px}
+.srv-chip{padding:5px 11px;border-radius:6px;font-size:12px;font-weight:700;border:1px solid;display:flex;align-items:center;gap:5px}
+.srv-chip i{font-size:13px}
+.sc-monitor{background:rgba(91,141,238,0.1);border-color:rgba(91,141,238,0.35);color:#89abf0}
+.sc-pxe{background:rgba(232,168,56,0.1);border-color:rgba(232,168,56,0.35);color:#eabd6a}
+.sc-log{background:rgba(76,175,125,0.1);border-color:rgba(76,175,125,0.35);color:#7dcba0}
+
+/* PN TAGS */
+.pn-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.pn-tag{font-size:13px;font-weight:600;padding:4px 10px;background:var(--surface2);border-radius:6px;border:1px solid var(--border);color:var(--text2);font-family:'Plus Jakarta Sans',sans-serif}
+.pn-tag.hi{background:rgba(91,141,238,0.15);border-color:rgba(91,141,238,0.4);color:#a0bdf5}
+.sm-related{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
+.rel-chip{font-size:11px;font-weight:700;padding:3px 9px;background:var(--surface3);border-radius:20px;border:1px solid var(--border);color:var(--text3);cursor:pointer;transition:all 0.15s;user-select:none}
+.rel-chip:hover{border-color:var(--accent);color:var(--accent)}
+
+/* SERVER PANEL */
+.srv-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:16px;transition:all 0.25s;animation:fadeup 0.35s ease both}
+.srv-card:hover{border-color:var(--border2);box-shadow:0 6px 28px rgba(0,0,0,0.2)}
+.srv-card-head{padding:16px 20px;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.srv-ip{font-size:18px;font-weight:800;color:var(--text)}
+.srv-type-pill{padding:5px 14px;border-radius:6px;font-size:13px;font-weight:700}
+.srv-loc-group{display:flex;gap:6px;margin-left:auto;flex-wrap:wrap}
+.srv-card-body{padding:18px 20px}
+.model-block{margin-bottom:16px}
+.model-block:last-child{margin-bottom:0}
+.model-block-title{font-size:14px;font-weight:800;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.model-block-title i{font-size:15px}
+.pn-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:6px}
+.pn-grid-item{padding:8px 12px;background:var(--surface2);border-radius:var(--radius-sm);border:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.pn-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.pn-grid-text{font-size:13px;font-weight:600;color:var(--text2)}
+
+/* OVERVIEW */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:14px;margin-bottom:28px}
+.stat-box{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:20px 16px;text-align:center;transition:all 0.25s;animation:fadeup 0.35s ease both}
+.stat-box:hover{transform:translateY(-2px);border-color:var(--border2)}
+.stat-num{font-size:40px;font-weight:800;line-height:1;margin-bottom:6px}
+.stat-lbl{font-size:13px;font-weight:700;color:var(--text3);letter-spacing:1px;text-transform:uppercase}
+.ov-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.ov-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:20px;border-left:4px solid;transition:all 0.25s;animation:fadeup 0.35s ease both}
+.ov-card:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,0.2)}
+.ov-model-name{font-size:22px;font-weight:800;margin-bottom:2px}
+.ov-meta{font-size:14px;color:var(--text2);font-weight:500;margin-bottom:14px}
+.ov-subtags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.ov-subtag{padding:5px 12px;background:var(--surface2);border-radius:6px;font-size:13px;font-weight:600;color:var(--text2);border:1px solid var(--border)}
+.ov-loctags{display:flex;flex-wrap:wrap;gap:6px}
+.ov-loctag{padding:5px 12px;border-radius:6px;font-size:13px;font-weight:600;color:var(--text2);background:var(--surface2);border:1px solid var(--border)}
+
+/* EMPTY */
+.empty{text-align:center;padding:80px 20px;color:var(--text3)}
+.empty i{font-size:56px;display:block;margin-bottom:14px;opacity:0.4}
+.empty p{font-size:16px;font-weight:600}
+
+/* SECTION HEADER */
+.sec-header{display:flex;align-items:center;gap:10px;margin-bottom:18px}
+.sec-header-line{flex:1;height:1px;background:var(--border)}
+.sec-header-text{font-size:13px;font-weight:700;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;white-space:nowrap}
+
+/* COPY TOOLTIP */
+.copy-tip{position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#23263a;color:#fff;font-size:11px;font-weight:700;padding:3px 8px;border-radius:5px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity 0.15s;z-index:200}
+.copy-tip.show{opacity:1}
+
+/* SERVER MAP FLOWCHART */
+.fc-bldg{margin-bottom:36px;animation:fadeup 0.35s ease both}
+.fc-bldg-hd{display:flex;align-items:center;gap:14px;margin-bottom:16px}
+.fc-floors{display:flex;flex-direction:column;gap:14px;padding-left:32px;position:relative}
+.fc-floors::before{content:'';position:absolute;left:10px;top:4px;bottom:18px;width:2px;background:var(--border2);border-radius:2px}
+.fc-floor-item{position:relative}
+.fc-floor-item::before{content:'';position:absolute;left:-22px;top:19px;width:22px;height:2px;background:var(--border2)}
+.fc-floor-hd{display:inline-flex;align-items:center;gap:8px;margin-bottom:10px}
+.fc-type-row{display:flex;flex-wrap:wrap;gap:10px;padding-left:8px}
+.fc-type-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;min-width:192px;flex:1 1 192px;max-width:320px}
+.fc-type-hd{padding:9px 14px;display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800;border-bottom:1px solid var(--border)}
+.fc-type-ips{padding:10px 14px;display:flex;flex-direction:column;gap:7px}
+.fc-ip-row{font-size:13px;font-weight:600;color:var(--text2);display:flex;align-items:center;gap:8px}
+.fc-ip-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+
+/* BUILDING / FLOOR HIERARCHY */
+.bldg-section{margin-bottom:32px;animation:fadeup 0.35s ease both}
+.bldg-header{display:flex;align-items:center;gap:14px;margin-bottom:12px}
+.floor-section{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:10px;transition:border-color 0.2s}
+.floor-section:hover{border-color:var(--border2)}
+.floor-hd{display:flex;align-items:center;gap:10px;padding:12px 18px;background:var(--surface2);border-bottom:1px solid var(--border)}
+.floor-rows{padding:10px 12px;display:flex;flex-direction:column;gap:7px}
+.sm-row{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;background:var(--surface2);border-radius:var(--radius-sm);border:1px solid var(--border);transition:border-color 0.2s}
+.sm-row:hover{border-color:var(--border2)}
+.sm-row-info{flex:1;min-width:0}
+.sm-row-name{font-size:14px;font-weight:700;color:var(--text);margin-bottom:7px}
+
+/* ADMIN */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:500;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.modal-box{background:var(--surface);border:1.5px solid var(--border2);border-radius:var(--radius);padding:30px;width:calc(100% - 40px);animation:fadeup 0.25s ease}
+.modal-title{font-size:17px;font-weight:800;color:var(--text);margin-bottom:4px;display:flex;align-items:center;gap:10px}
+.modal-sub{font-size:13px;color:var(--text2);margin-bottom:20px}
+.form-group{margin-bottom:14px}
+.form-label{font-size:11px;font-weight:700;color:var(--text3);letter-spacing:1.2px;text-transform:uppercase;margin-bottom:6px;display:block}
+.form-ctrl{width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:10px 13px;color:var(--text);font-size:14px;font-family:'Plus Jakarta Sans',sans-serif;outline:none;transition:border-color 0.2s}
+.form-ctrl:focus{border-color:var(--accent)}
+.btn{padding:10px 20px;border-radius:var(--radius-sm);font-size:14px;font-weight:700;cursor:pointer;border:none;font-family:'Plus Jakarta Sans',sans-serif;display:inline-flex;align-items:center;gap:6px;transition:all 0.2s}
+.btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{filter:brightness(1.1)}
+.btn-red{background:var(--red-soft);color:var(--red);border:1px solid rgba(224,92,106,0.3)}.btn-red:hover{background:var(--red);color:#fff}
+.btn-ghost{background:var(--surface2);color:var(--text2);border:1px solid var(--border)}.btn-ghost:hover{color:var(--text);border-color:var(--border2)}
+.btn-sm{padding:5px 13px;font-size:12px}
+.login-err{color:var(--red);font-size:13px;font-weight:600;margin-bottom:14px;display:none}
+.admin-btn{padding:5px 14px;border-radius:20px;background:var(--surface2);border:1px solid var(--border);display:inline-flex;align-items:center;gap:6px;cursor:pointer;color:var(--text3);font-size:13px;font-weight:700;transition:all 0.2s;flex-shrink:0}
+.admin-btn:hover{border-color:var(--accent);color:var(--accent)}
+.admin-btn.active{border-color:rgba(76,175,125,0.4);color:var(--green);background:var(--green-soft)}
+.admin-panel{position:fixed;inset:0;background:var(--bg);z-index:300;display:none;flex-direction:column}
+.admin-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;gap:12px;flex-shrink:0}
+.admin-bar-title{font-size:16px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:8px}
+.admin-sw{display:flex;gap:3px;background:var(--surface2);border-radius:var(--radius-sm);padding:3px;margin:0 auto}
+.admin-sw-tab{padding:7px 18px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;color:var(--text3);transition:all 0.2s}
+.admin-sw-tab.active{background:var(--surface3);color:var(--text)}
+.admin-body{flex:1;overflow-y:auto;padding:24px 28px}
+.admin-section{max-width:960px;margin:0 auto}
+.admin-sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.admin-sec-ttl{font-size:15px;font-weight:800;color:var(--text)}
+.atable{width:100%;border-collapse:collapse;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.atable th{background:var(--surface2);padding:10px 14px;font-size:11px;font-weight:700;color:var(--text3);letter-spacing:1.2px;text-transform:uppercase;text-align:left;border-bottom:1px solid var(--border)}
+.atable td{padding:10px 14px;font-size:13px;color:var(--text2);border-bottom:1px solid var(--border);vertical-align:middle}
+.atable tr:last-child td{border-bottom:none}
+.atable tbody tr:hover td{background:rgba(255,255,255,0.02)}
+.row-acts{display:flex;gap:6px}
+.tag-wrap{display:flex;flex-wrap:wrap;gap:5px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;min-height:44px;cursor:text;transition:border-color 0.2s;align-items:flex-start;align-content:flex-start}
+.tag-wrap:focus-within{border-color:var(--accent)}
+.tag-item{padding:3px 9px;background:var(--surface3);border-radius:5px;font-size:12px;font-weight:600;color:var(--text);display:inline-flex;align-items:center;gap:5px;flex-shrink:0}
+.tag-x{cursor:pointer;color:var(--text3);font-size:15px;line-height:1}.tag-x:hover{color:var(--red)}
+.tag-input-el{border:none;outline:none;background:transparent;color:var(--text);font-size:13px;font-family:'Plus Jakarta Sans',sans-serif;min-width:140px;padding:2px 0;flex:1}
+.chk-row{display:flex;flex-wrap:wrap;gap:6px}
+.chk-pill{display:flex;align-items:center;gap:6px;padding:6px 11px;background:var(--surface2);border:1.5px solid var(--border);border-radius:7px;cursor:pointer;transition:all 0.2s;font-size:12px;font-weight:600;color:var(--text2)}
+.chk-pill.checked{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="logo-icon">
+    <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+      <rect x="2" y="2" width="10" height="10" rx="2" fill="#5b8dee" opacity="0.9"/>
+      <rect x="14" y="2" width="10" height="10" rx="2" fill="#9b72e8" opacity="0.9"/>
+      <rect x="2" y="14" width="10" height="10" rx="2" fill="#4caf7d" opacity="0.9"/>
+      <rect x="14" y="14" width="10" height="10" rx="2" fill="#e8a838" opacity="0.9"/>
+    </svg>
+  </div>
+  <div>
+    <div class="logo-title">Save Location System</div>
+    <div class="logo-sub">META · Server Tracking</div>
+  </div>
+  <div class="header-badges">
+    <div class="hbadge hbadge-blue">META</div>
+    <div class="hbadge hbadge-green">● Live</div>
+    <div class="hbadge" id="hbadge-updated" style="display:none;color:var(--text3);border-color:var(--border);background:transparent;font-size:12px;font-weight:600"></div>
+    <div class="admin-btn" id="admin-lock" onclick="handleAdminBtn()">
+      <i class="ti ti-lock" style="font-size:15px"></i> Admin
+    </div>
+  </div>
+</div>
+
+<!-- NAV -->
+<div class="nav">
+  <div class="nav-tab active" id="tab-search" onclick="switchTab('search')">
+    <i class="ti ti-search"></i> PN / Model Search
+  </div>
+  <div class="nav-tab" id="tab-server" onclick="switchTab('server')">
+    <i class="ti ti-server"></i> Server Lookup
+  </div>
+  <div class="nav-tab" id="tab-overview" onclick="switchTab('overview')">
+    <i class="ti ti-layout-grid"></i> Overview
+  </div>
+  <div class="nav-tab" id="tab-map" onclick="switchTab('map')">
+    <i class="ti ti-hierarchy"></i> Server Map
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- SEARCH PANEL -->
+  <div class="panel active" id="panel-search">
+    <div class="search-card">
+      <div class="search-title"><i class="ti ti-search"></i> Search by Model Name or Part Number</div>
+      <div class="input-wrap">
+        <input type="text" id="pn-search" placeholder="Type a PN like  33F0SMA00V0  or model like  F0S Medusa" oninput="renderSearch()">
+        <i class="ti ti-search input-icon"></i>
+      </div>
+      <div class="row-between">
+        <div class="chips">
+          <span class="chip-label">FILTER:</span>
+          <div class="chip chip-all on"  id="chip-all"  onclick="toggleChip('all')">All</div>
+          <div class="chip chip-f0s"     id="chip-f0s"  onclick="toggleChip('f0s')">F0S</div>
+          <div class="chip chip-f0eg"    id="chip-f0eg" onclick="toggleChip('f0eg')">F0EG</div>
+          <div class="chip chip-f0es"    id="chip-f0es" onclick="toggleChip('f0es')">F0ES</div>
+          <div class="chip chip-xg1"     id="chip-xg1"  onclick="toggleChip('xg1')">XG1</div>
+          <div class="chip chip-f0ej"    id="chip-f0ej" onclick="toggleChip('f0ej')">F0EJ</div>
+          <div class="chip chip-doa"     id="chip-doa"  onclick="toggleDoa(this)">⚠ DOA</div>
+        </div>
+        <div class="result-count" id="search-count"></div>
+      </div>
+    </div>
+    <div id="search-results"></div>
+  </div>
+
+  <!-- SERVER PANEL -->
+  <div class="panel" id="panel-server">
+    <div class="search-card">
+      <div class="search-title"><i class="ti ti-server"></i> Search by Server IP Address</div>
+      <div class="input-wrap">
+        <input type="text" id="server-search" placeholder="Type an IP like  10.94.94.30  or partial  10.94.165" oninput="renderServerSearch()">
+        <i class="ti ti-server input-icon"></i>
+      </div>
+      <div class="row-between">
+        <div><div class="chip chip-doa" id="chip-srv-doa" onclick="toggleSrvDoa(this)">⚠ DOA Only</div></div>
+        <div class="result-count" id="server-count"></div>
+      </div>
+    </div>
+    <div id="server-results"></div>
+  </div>
+
+  <!-- OVERVIEW PANEL -->
+  <div class="panel" id="panel-overview">
+    <div id="overview-content"></div>
+  </div>
+
+  <!-- SERVER MAP PANEL -->
+  <div class="panel" id="panel-map">
+    <div id="map-content"></div>
+  </div>
+
+</div>
+
+<!-- LOGIN MODAL -->
+<div id="login-modal" class="modal-overlay" style="display:none">
+  <div class="modal-box" style="max-width:380px">
+    <div class="modal-title"><i class="ti ti-lock" style="color:var(--accent)"></i> Admin Login</div>
+    <div class="modal-sub">Enter your credentials to manage data</div>
+    <div class="form-group">
+      <label class="form-label">Username</label>
+      <input type="text" class="form-ctrl" id="login-user" placeholder="Username" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Password</label>
+      <input type="password" class="form-ctrl" id="login-pass" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div class="login-err" id="login-err">Incorrect username or password</div>
+    <div style="display:flex;gap:10px;justify-content:flex-end">
+      <button class="btn btn-ghost" onclick="closeLoginModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="doLogin()"><i class="ti ti-login"></i> Login</button>
+    </div>
+  </div>
+</div>
+
+<!-- SUBMODEL MODAL -->
+<div id="sm-modal" class="modal-overlay" style="display:none;z-index:600">
+  <div class="modal-box" style="max-width:580px">
+    <div class="modal-title" id="sm-modal-title"><i class="ti ti-cpu"></i> Submodel</div>
+    <div class="modal-sub">Fill in the details below</div>
+    <input type="hidden" id="sm-edit-idx" value="-1">
+    <div style="display:grid;grid-template-columns:140px 1fr;gap:12px">
+      <div class="form-group">
+        <label class="form-label">Model</label>
+        <select class="form-ctrl" id="sm-model" style="appearance:none;cursor:pointer">
+          <option>F0S</option><option>F0EG</option><option>F0ES</option><option>XG1</option><option>F0EJ</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Submodel Name</label>
+        <input type="text" class="form-ctrl" id="sm-name" placeholder="e.g. F0S MB w/ retimer">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Part Numbers &nbsp;<span style="color:var(--text3);font-weight:400;font-size:10px;text-transform:none;letter-spacing:0">press Enter or , to add</span></label>
+      <div class="tag-wrap" id="pn-tag-wrap" onclick="document.getElementById('pn-ti').focus()">
+        <input class="tag-input-el" id="pn-ti" placeholder="Type PN and press Enter…" onkeydown="pnKeydown(event)" oninput="pnInputChk(event)">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Assigned Servers</label>
+      <div class="chk-row" id="srv-chk-row"></div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:18px">
+      <button class="btn btn-ghost" onclick="closeSmModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveSmModal()"><i class="ti ti-device-floppy"></i> Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- SERVER MODAL -->
+<div id="srv-modal" class="modal-overlay" style="display:none;z-index:600">
+  <div class="modal-box" style="max-width:440px">
+    <div class="modal-title" id="srv-modal-title"><i class="ti ti-server"></i> Server</div>
+    <div class="modal-sub">Fill in the server details below</div>
+    <input type="hidden" id="srv-edit-ip" value="">
+    <div class="form-group">
+      <label class="form-label">IP Address</label>
+      <input type="text" class="form-ctrl" id="srv-ip" placeholder="e.g. 10.94.94.30">
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+      <div class="form-group">
+        <label class="form-label">Type</label>
+        <select class="form-ctrl" id="srv-type" style="appearance:none;cursor:pointer">
+          <option>Monitor</option><option>PXE</option><option>Log</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Building</label>
+        <input type="text" class="form-ctrl" id="srv-building" placeholder="F7">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Floor</label>
+        <input type="text" class="form-ctrl" id="srv-floor" placeholder="3F">
+      </div>
+    </div>
+    <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-top:4px">
+      <input type="checkbox" id="srv-doa" style="width:16px;height:16px;accent-color:var(--red);cursor:pointer">
+      <span style="font-size:14px;font-weight:600;color:var(--text2)">Mark as DOA</span>
+    </label>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px">
+      <button class="btn btn-ghost" onclick="closeSrvModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveSrvModal()"><i class="ti ti-device-floppy"></i> Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div id="admin-panel" class="admin-panel">
+  <div class="admin-bar">
+    <div class="admin-bar-title"><i class="ti ti-shield-lock" style="color:var(--green)"></i> Admin Panel</div>
+    <div class="admin-sw">
+      <div class="admin-sw-tab active" id="atab-submodels" onclick="switchATab('submodels')"><i class="ti ti-cpu"></i> Submodels</div>
+      <div class="admin-sw-tab" id="atab-servers" onclick="switchATab('servers')"><i class="ti ti-server"></i> Servers</div>
+    </div>
+    <button class="btn btn-ghost btn-sm" onclick="adminLogout()" style="margin-left:auto"><i class="ti ti-logout"></i> Logout</button>
+    <button class="btn btn-ghost btn-sm" onclick="closeAdmin()"><i class="ti ti-x"></i> Close</button>
+  </div>
+  <div class="admin-body">
+    <!-- Submodels section -->
+    <div class="admin-section" id="asec-submodels">
+      <div class="admin-sec-head">
+        <div class="admin-sec-ttl">Submodels</div>
+        <button class="btn btn-primary btn-sm" onclick="openSmAdd()"><i class="ti ti-plus"></i> Add Submodel</button>
+      </div>
+      <table class="atable">
+        <thead><tr><th>Model</th><th>Submodel</th><th>PNs</th><th>Servers</th><th>Actions</th></tr></thead>
+        <tbody id="admin-sm-tbody"></tbody>
+      </table>
+    </div>
+    <!-- Servers section -->
+    <div class="admin-section" id="asec-servers" style="display:none">
+      <div class="admin-sec-head">
+        <div class="admin-sec-ttl">Servers</div>
+        <button class="btn btn-primary btn-sm" onclick="openSrvAdd()"><i class="ti ti-plus"></i> Add Server</button>
+      </div>
+      <table class="atable">
+        <thead><tr><th>IP Address</th><th>Type</th><th>Building</th><th>Floor</th><th>DOA</th><th>Actions</th></tr></thead>
+        <tbody id="admin-srv-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+const MC = {
+  'F0S':  {color:'#5b8dee', soft:'rgba(91,141,238,0.15)',  text:'#fff'},
+  'F0EG': {color:'#9b72e8', soft:'rgba(155,114,232,0.15)', text:'#fff'},
+  'F0ES': {color:'#4caf7d', soft:'rgba(76,175,125,0.15)',  text:'#fff'},
+  'XG1':  {color:'#e8a838', soft:'rgba(232,168,56,0.15)',  text:'#fff'},
+  'F0EJ': {color:'#e05c6a', soft:'rgba(224,92,106,0.15)',  text:'#fff'},
+};
+
+const DEFAULT_SERVERS = {
+  '10.94.94.30':   {type:'Monitor', building:'F7',  floor:'3F'},
+  '10.94.94.121':  {type:'Monitor', building:'F7',  floor:'3F'},
+  '10.94.95.78':   {type:'Monitor', building:'F7',  floor:'3F'},
+  '10.94.94.20':   {type:'Log',     building:'F7',  floor:'3F'},
+  '10.94.165.103': {type:'Monitor', building:'F7',  floor:'2F'},
+  '10.94.165.95':  {type:'PXE',     building:'F7',  floor:'2F'},
+  '10.94.165.100': {type:'PXE',     building:'F7',  floor:'2F'},
+  '10.94.165.86':  {type:'Log',     building:'F7',  floor:'2F'},
+  '10.94.95.12':   {type:'Monitor', building:'F7',  floor:'3F'},
+  '10.94.95.13':   {type:'PXE',     building:'F7',  floor:'3F'},
+  '10.94.95.33':   {type:'PXE',     building:'F7',  floor:'3F'},
+  '10.94.95.14':   {type:'Log',     building:'F7',  floor:'3F'},
+  '10.94.107.73':  {type:'Monitor', building:'F7',  floor:'3F'},
+  '10.94.107.97':  {type:'PXE',     building:'F7',  floor:'3F'},
+  '10.94.107.82':  {type:'Log',     building:'F7',  floor:'3F'},
+  '10.93.40.12':   {type:'Monitor', building:'F10', floor:'2F', doa:true},
+  '10.93.40.13':   {type:'PXE',     building:'F10', floor:'2F', doa:true},
+  '10.93.40.14':   {type:'Log',     building:'F10', floor:'2F', doa:true},
+  '10.93.40.32':   {type:'Monitor', building:'F10', floor:'3F'},
+  '10.93.40.33':   {type:'PXE',     building:'F10', floor:'3F'},
+  '10.93.40.34':   {type:'Log',     building:'F10', floor:'3F'},
+};
+
+const DEFAULT_DATA = [
+  {model:'F0S', submodel:'F0S BSM',           pns:['3VF0CIB01K0'], servers:['10.94.94.30','10.94.94.20']},
+  {model:'F0S', submodel:'F0S FIO',           pns:['3HF0SYB0000'], servers:['10.94.94.30','10.94.94.20']},
+  {model:'F0S', submodel:'F0S Fanboard',      pns:['3XF00FB0020','3XF00FB0030'], servers:['10.94.94.30','10.94.94.20']},
+  {model:'F0S', submodel:'F0S Medusa',        pns:['3XF0SFB0020','3XF0SFB0030'], servers:['10.94.94.30','10.94.94.20']},
+  {model:'F0S', submodel:'F0S Spider',        pns:['35F0SPB00M0','35F0SPB00N0','35F0SPB00Q0','35F0SPB00S0','35F0SPB00U0','35F0SPB00P0','35F0SPB00R0'], servers:['10.94.95.12','10.94.95.13','10.94.95.14']},
+  {model:'F0S', submodel:'F0S Spider Alt',    pns:['3EF0SGB0030','3EF0SGB0040','3EF0SGB0050','3EF0SGB0060'], servers:['10.94.95.13','10.94.95.14']},
+  {model:'F0S', submodel:'F0S MMG',           pns:['3MF0SMA00F0','3MF0SMA00D0','3MF0SMA0070','3MF0SMA0090','3MF0SMA00Q0','3MF0SMA00S0','3MF0SMA00W0','3MF0SMA00Y0'], servers:['10.94.165.103','10.94.165.100','10.94.165.86']},
+  {model:'F0S', submodel:'F0S MB w/ retimer', pns:['33F0SMA00V0','33F0SMA00X0','33F0SMA0170','33F0SMA0190','33F0SMA04F0','33F0SMA04J0','33F0SMA0400'], servers:['10.94.95.78','10.94.94.20','10.93.40.12','10.93.40.13','10.93.40.14']},
+  {model:'F0S', submodel:'F0S MB w/o retimer',pns:['33F0SMA00L0','33F0SMA01Y0','33F0SMA0210','33F0SMA01W0','33F0SMA01Z0','33F0SMA04A0','33F0SMA04C0','33F0SMA04S0'], servers:['10.94.95.78','10.94.94.20','10.93.40.12','10.93.40.13','10.93.40.14']},
+  {model:'F0EG',submodel:'F0EG BB',           pns:['39F0EBA00K0','39F0EBA00L0'], servers:['10.94.94.30','10.94.94.20']},
+  {model:'F0EG',submodel:'F0EG FIO',          pns:['3HF0EYB0010'], servers:['10.94.94.30','10.94.94.20']},
+  {model:'F0EG',submodel:'F0EG MEDUSA',       pns:['35F0EPB0040'], servers:['10.94.94.30','10.94.94.20']},
+  {model:'F0EG',submodel:'F0EG VERTICAL',     pns:['35F0EPB0000'], servers:['10.94.94.30','10.94.94.20']},
+  {model:'F0EG',submodel:'F0EG BSM',          pns:['3VF0CIB01B0'], servers:['10.94.94.30','10.94.94.20']},
+  {model:'F0EG',submodel:'F0EG MB',           pns:['33F0EMA13U0','33F0EMA13W0','33F0EMA14R0','33F0EMA14T0','33F0EMA14X0','33F0EMA14W0','33F0EMA27N0','33F0EMA27R0','33F0EMA27P0','33F0EMA27Q0','33F0EMA27S0','33F0EMA27X0','33F0EMA27W0','33F0EMA28C0','33F0EMA28D0','33F0EMA28H0','33F0EMA28B0','33F0EMA2890','33F0EMA28A0','33F0EMA28I0'], servers:['10.94.95.78','10.94.94.20']},
+  {model:'F0ES',submodel:'F0ES MEDUSA',       pns:['35F0EPB00L0','35F0EPB00P0','35F0EPB00B0'], servers:['10.94.94.30','10.94.94.20']},
+  {model:'F0ES',submodel:'F0ES Vertical',     pns:['35F0EPB00I0'], servers:['10.94.94.30','10.94.94.20']},
+  {model:'F0ES',submodel:'F0ES MB',           pns:['33F0EMA18P0','33F0EMA18T0','33F0EMA2460','33F0EMA25D0','33F0EMA25F0','33F0EMA25L0','33F0EMA25Q0'], servers:['10.94.165.103','10.94.165.95','10.94.165.86']},
+  {model:'F0ES',submodel:'F0ES BB',           pns:['39F0EBA00A0','39F0EBA00W0','39F0EBA00X0','39F0EBA0110','39F0EBA01J0','39F0EBA01P0'], servers:['10.94.165.103','10.94.165.100','10.94.165.86']},
+  {model:'XG1', submodel:'XG1',               pns:['23XG1MA00M0','23XG1MA00M0EBT','23XG1MA00Z0','23XG1MA00Z0EBT','23XG1MA0110','23XG1MA0110EBT','23XG1MA0150','23XG1MA0150EBT','23XG1MA0160','23XG1MA0160EBT','23XG1MA0170','23XG1MA0170EBT','23XG1MA0180','23XG1MA0180EBT'], servers:['10.94.107.73','10.94.107.97','10.94.107.82']},
+  {model:'F0EJ',submodel:'F0EJ MB',           pns:['33F0EMA2730','33F0EMA2760','33F0EMA2780','33F0EMA28J0','33F0EMA28L0','33F0EMA28T0','33F0EMA28W0','33F0EMA28Y0'], servers:['10.94.165.100','10.94.165.86']},
+  {model:'F0EJ',submodel:'F0EJ BB',           pns:['39F0EBA00A0','39F0EBA0110','39F0EBA01J0','39F0EBA01P0'], servers:['10.94.165.100','10.94.165.86']},
+];
+
+let SERVERS = JSON.parse(localStorage.getItem('meta_servers') || 'null') || JSON.parse(JSON.stringify(DEFAULT_SERVERS));
+let DATA    = JSON.parse(localStorage.getItem('meta_data')    || 'null') || JSON.parse(JSON.stringify(DEFAULT_DATA));
+
+function saveData() {
+  localStorage.setItem('meta_servers', JSON.stringify(SERVERS));
+  localStorage.setItem('meta_data', JSON.stringify(DATA));
+  localStorage.setItem('meta_updated', new Date().toISOString());
+  updateTimestamp();
+  renderSearch();
+}
+
+function updateTimestamp() {
+  const raw = localStorage.getItem('meta_updated');
+  const el = document.getElementById('hbadge-updated');
+  if (!el || !raw) return;
+  const d = new Date(raw);
+  el.textContent = 'Updated: ' + d.toLocaleDateString('en-GB', {day:'numeric', month:'short'})
+    + ' ' + d.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'});
+  el.style.display = '';
+}
+
+function getLocs(servers) {
+  const seen = new Set(), locs = [];
+  servers.forEach(ip => {
+    const s = SERVERS[ip];
+    if (s) { const k = s.building+s.floor+(s.doa?'doa':''); if (!seen.has(k)) { seen.add(k); locs.push(s); } }
+  });
+  return locs;
+}
+
+function srvTypeClass(type) {
+  return {Monitor:'sc-monitor', PXE:'sc-pxe', Log:'sc-log'}[type] || 'sc-monitor';
+}
+function srvTypeIcon(type) {
+  return {Monitor:'ti-eye', PXE:'ti-wifi', Log:'ti-file-text'}[type] || 'ti-server';
+}
+
+function srvChipHtml(ip) {
+  const s = SERVERS[ip];
+  const base = s ? `${srvTypeClass(s.type)}` : 'sc-monitor';
+  const icon = s ? `ti ${srvTypeIcon(s.type)}` : 'ti ti-server';
+  const label = s ? `${ip} <span style="opacity:0.6;font-size:11px">${s.type}</span>` : ip;
+  return `<div class="srv-chip ${base}" data-copy="${ip}" style="cursor:pointer;position:relative"><i class="${icon}"></i>${label}<span class="copy-tip">Copied!</span></div>`;
+}
+
+let activeChips = new Set(['all']);
+
+function toggleChip(val) {
+  if (val==='all') { activeChips = new Set(['all']); }
+  else {
+    activeChips.delete('all');
+    activeChips.has(val) ? activeChips.delete(val) : activeChips.add(val);
+    if (!activeChips.size) activeChips.add('all');
+  }
+  ['all','f0s','f0eg','f0es','xg1','f0ej'].forEach(c => {
+    const el = document.getElementById('chip-'+c);
+    if (el) el.className = 'chip chip-'+c + (activeChips.has(c) ? ' on' : '');
+  });
+  renderSearch();
+}
+
+function buildLocMap(source) {
+  const locMap = new Map();
+  source.forEach(d => {
+    getLocs(d.servers).forEach(loc => {
+      const key = loc.building + '|' + loc.floor + '|' + (loc.doa ? '1' : '0');
+      if (!locMap.has(key)) locMap.set(key, {building: loc.building, floor: loc.floor, doa: !!loc.doa, items: []});
+      const slot = locMap.get(key);
+      if (!slot.items.find(s => s.submodel === d.submodel)) slot.items.push(d);
+    });
+  });
+  return [...locMap.values()].sort((a, b) => {
+    if (a.building !== b.building) return a.building.localeCompare(b.building);
+    if (a.floor !== b.floor) return a.floor.localeCompare(b.floor);
+    return (a.doa ? 1 : 0) - (b.doa ? 1 : 0);
+  });
+}
+
+function groupByBuilding(sortedLocs) {
+  const map = new Map();
+  sortedLocs.forEach(loc => {
+    if (!map.has(loc.building)) map.set(loc.building, []);
+    map.get(loc.building).push(loc);
+  });
+  return map;
+}
+
+function relatedHtml(d) {
+  const others = DATA.filter(x => x.model === d.model && x.submodel !== d.submodel);
+  if (!others.length) return '';
+  const chips = others.map(x => {
+    const enc = encodeURIComponent(x.submodel);
+    const label = x.submodel.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+    return `<span class="rel-chip" onclick="goRelated(decodeURIComponent('${enc}'))">${label}</span>`;
+  }).join('');
+  return `<div class="sm-related"><span style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:1px;white-space:nowrap;margin-right:4px">SEE ALSO</span>${chips}</div>`;
+}
+
+function goRelated(name) {
+  document.getElementById('pn-search').value = name;
+  activeChips = new Set(['all']);
+  ['all','f0s','f0eg','f0es','xg1','f0ej'].forEach(c => {
+    const el = document.getElementById('chip-'+c);
+    if (el) el.className = 'chip chip-'+c + (c==='all' ? ' on' : '');
+  });
+  doaOnly = false;
+  const doaEl = document.getElementById('chip-doa');
+  if (doaEl) doaEl.classList.remove('on');
+  renderSearch();
+}
+
+function renderSearch() {
+  const q = (document.getElementById('pn-search').value || '').toLowerCase().trim();
+  const all = activeChips.has('all');
+  let filtered = DATA.filter(d => {
+    if (!all && !activeChips.has(d.model.toLowerCase())) return false;
+    if (!q) return true;
+    return d.submodel.toLowerCase().includes(q) || d.pns.some(p => p.toLowerCase().includes(q));
+  });
+  if (doaOnly) filtered = filtered.filter(d => d.servers.some(ip => SERVERS[ip]?.doa));
+  document.getElementById('search-count').textContent = filtered.length + ' result' + (filtered.length !== 1 ? 's' : '');
+  const el = document.getElementById('search-results');
+  if (!filtered.length) {
+    el.innerHTML = `<div class="empty"><i class="ti ti-search-off"></i><p>No results found. Try a different term.</p></div>`;
+    return;
+  }
+  const byBuilding = groupByBuilding(buildLocMap(filtered));
+  el.innerHTML = [...byBuilding.entries()].map(([bldg, floors], bi) => {
+    const floorsHtml = floors.map(loc => {
+      const rowsHtml = loc.items.map(d => {
+        const mc = MC[d.model];
+        const pnHtml = d.pns.map(pn => {
+          const hi = q && pn.toLowerCase().includes(q);
+          return `<span class="pn-tag${hi ? ' hi' : ''}" data-copy="${pn}" style="cursor:pointer;position:relative">${pn}<span class="copy-tip">Copied!</span></span>`;
+        }).join('');
+        return `<div class="sm-row">
+          <span class="mbadge" style="background:${mc.soft};color:${mc.color};border:1.5px solid ${mc.color}55;flex-shrink:0;margin-top:1px">${d.model}</span>
+          <div class="sm-row-info">
+            <div class="sm-row-name">${d.submodel}</div>
+            <div class="pn-tags">${pnHtml}</div>
+            <div class="srv-chips" style="margin-top:8px">${d.servers.map(srvChipHtml).join('')}</div>
+            ${relatedHtml(d)}
+          </div>
+        </div>`;
+      }).join('');
+      return `<div class="floor-section">
+        <div class="floor-hd">
+          <span class="lpill lpill-f" style="font-size:14px;font-weight:800;padding:6px 16px"><i class="ti ti-layers-subtract"></i>${loc.floor}</span>
+          ${loc.doa ? '<span class="lpill lpill-doa"><i class="ti ti-alert-triangle"></i>DOA</span>' : ''}
+          <span style="margin-left:auto;color:var(--text3);font-size:13px;font-weight:600">${loc.items.length} submodel${loc.items.length !== 1 ? 's' : ''}</span>
+        </div>
+        <div class="floor-rows">${rowsHtml}</div>
+      </div>`;
+    }).join('');
+    return `<div class="bldg-section" style="animation-delay:${bi * 0.08}s">
+      <div class="bldg-header">
+        <span class="lpill lpill-b" style="font-size:16px;font-weight:800;padding:8px 22px"><i class="ti ti-building"></i>${bldg}</span>
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+      </div>
+      ${floorsHtml}
+    </div>`;
+  }).join('');
+}
+
+function renderServerSearch() {
+  const q = (document.getElementById('server-search').value || '').trim();
+  const ips = Object.keys(SERVERS).filter(ip => !q || ip.includes(q)).filter(ip => !srvDoaOnly || SERVERS[ip]?.doa);
+  document.getElementById('server-count').textContent = ips.length + ' server' + (ips.length !== 1 ? 's' : '');
+  const el = document.getElementById('server-results');
+  if (!ips.length) {
+    el.innerHTML = `<div class="empty"><i class="ti ti-server-off"></i><p>No servers match your search.</p></div>`;
+    return;
+  }
+  el.innerHTML = ips.map((ip, i) => {
+    const s = SERVERS[ip];
+    const matches = DATA.filter(d => d.servers.includes(ip));
+    const byModel = {};
+    matches.forEach(d => { if (!byModel[d.model]) byModel[d.model]=[]; byModel[d.model].push(d); });
+    const typePillClass = srvTypeClass(s.type);
+    const modelHtml = Object.entries(byModel).map(([model, items]) => {
+      const mc = MC[model];
+      const pns = items.flatMap(it => it.pns);
+      return `<div class="model-block">
+        <div class="model-block-title" style="color:${mc.color}">
+          <i class="ti ti-cpu"></i>${model} — ${items.map(it=>it.submodel).join(', ')}
+        </div>
+        <div class="pn-grid">${pns.map(pn => `
+          <div class="pn-grid-item">
+            <div class="pn-dot" style="background:${mc.color}"></div>
+            <span class="pn-grid-text">${pn}</span>
+          </div>`).join('')}
+        </div>
+      </div>`;
+    }).join('');
+    return `<div class="srv-card" style="animation-delay:${Math.min(i,8)*0.06}s">
+      <div class="srv-card-head">
+        <i class="ti ti-server" style="font-size:22px;color:#5b8dee"></i>
+        <span class="srv-ip">${ip}</span>
+        <span class="srv-chip ${typePillClass}" style="font-size:13px;padding:5px 14px">
+          <i class="ti ${srvTypeIcon(s.type)}"></i>${s.type}
+        </span>
+        <div class="srv-loc-group">
+          <span class="lpill lpill-b"><i class="ti ti-building"></i>${s.building}</span>
+          <span class="lpill lpill-f"><i class="ti ti-layers-subtract"></i>${s.floor}</span>
+          ${s.doa ? '<span class="lpill lpill-doa"><i class="ti ti-alert-triangle"></i>DOA</span>' : ''}
+        </div>
+      </div>
+      <div class="srv-card-body">
+        ${matches.length ? modelHtml : '<p style="color:var(--text3);font-size:14px">No PNs assigned to this server</p>'}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderOverview() {
+  const totalPNs = DATA.reduce((s,d)=>s+d.pns.length, 0);
+  const totalSrv = Object.keys(SERVERS).length;
+  const buildings = [...new Set(Object.values(SERVERS).map(s=>s.building))];
+  const stats = `<div class="stats-grid">
+    <div class="stat-box" style="animation-delay:0s"><div class="stat-num" style="color:#5b8dee">5</div><div class="stat-lbl">Models</div></div>
+    <div class="stat-box" style="animation-delay:0.05s"><div class="stat-num" style="color:#9b72e8">${DATA.length}</div><div class="stat-lbl">Submodels</div></div>
+    <div class="stat-box" style="animation-delay:0.1s"><div class="stat-num" style="color:#4caf7d">${totalPNs}</div><div class="stat-lbl">Part Nos</div></div>
+    <div class="stat-box" style="animation-delay:0.15s"><div class="stat-num" style="color:#e8a838">${totalSrv}</div><div class="stat-lbl">Servers</div></div>
+    <div class="stat-box" style="animation-delay:0.2s"><div class="stat-num" style="color:#e05c6a">${buildings.length}</div><div class="stat-lbl">Buildings</div></div>
+  </div>`;
+  const byBuilding = groupByBuilding(buildLocMap(DATA));
+  const locView = [...byBuilding.entries()].map(([bldg, floors], bi) => {
+    const floorsHtml = floors.map(loc => {
+      const tagsHtml = loc.items.map(d => {
+        const mc = MC[d.model];
+        return `<span class="ov-subtag" style="color:${mc.color};border-color:${mc.color}44;background:${mc.soft}">${d.model} · ${d.submodel}</span>`;
+      }).join('');
+      return `<div class="floor-section" style="margin-bottom:8px">
+        <div class="floor-hd">
+          <span class="lpill lpill-f" style="font-size:13px;font-weight:800"><i class="ti ti-layers-subtract"></i>${loc.floor}</span>
+          ${loc.doa ? '<span class="lpill lpill-doa"><i class="ti ti-alert-triangle"></i>DOA</span>' : ''}
+          <span style="margin-left:auto;color:var(--text3);font-size:12px;font-weight:600">${loc.items.length} submodel${loc.items.length !== 1 ? 's' : ''}</span>
+        </div>
+        <div style="padding:12px 16px;display:flex;flex-wrap:wrap;gap:6px">${tagsHtml}</div>
+      </div>`;
+    }).join('');
+    return `<div class="bldg-section" style="animation-delay:${bi * 0.08}s">
+      <div class="bldg-header">
+        <span class="lpill lpill-b" style="font-size:15px;font-weight:800;padding:7px 20px"><i class="ti ti-building"></i>${bldg}</span>
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+      </div>
+      ${floorsHtml}
+    </div>`;
+  }).join('');
+  document.getElementById('overview-content').innerHTML =
+    `<div class="sec-header"><div class="sec-header-text">System Summary</div><div class="sec-header-line"></div></div>` + stats +
+    `<div class="sec-header" style="margin-bottom:18px"><div class="sec-header-text">Location Breakdown</div><div class="sec-header-line"></div></div>` +
+    locView;
+}
+
+function renderServerMap() {
+  const TC = {
+    Monitor: {color:'#5b8dee', bg:'rgba(91,141,238,0.10)', border:'rgba(91,141,238,0.35)', icon:'ti-eye'},
+    PXE:     {color:'#e8a838', bg:'rgba(232,168,56,0.10)',  border:'rgba(232,168,56,0.35)',  icon:'ti-wifi'},
+    Log:     {color:'#4caf7d', bg:'rgba(76,175,125,0.10)', border:'rgba(76,175,125,0.35)', icon:'ti-file-text'},
+  };
+
+  // Build: building → floor → type → [{ip, doa}]
+  const bldgMap = new Map();
+  Object.entries(SERVERS).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([ip, s]) => {
+    if (!bldgMap.has(s.building)) bldgMap.set(s.building, new Map());
+    const floorMap = bldgMap.get(s.building);
+    if (!floorMap.has(s.floor)) floorMap.set(s.floor, {Monitor:[], PXE:[], Log:[]});
+    (floorMap.get(s.floor)[s.type] = floorMap.get(s.floor)[s.type] || []).push({ip, doa:!!s.doa});
+  });
+
+  const html = [...bldgMap.entries()].sort((a,b)=>a[0].localeCompare(b[0])).map(([bldg, floorMap], bi) => {
+    const floorsHtml = [...floorMap.entries()].sort((a,b)=>a[0].localeCompare(b[0])).map(([floor, typeData]) => {
+      const cardsHtml = ['Monitor','PXE','Log'].map(type => {
+        const srvs = typeData[type] || [];
+        if (!srvs.length) return '';
+        const tc = TC[type];
+        const ipsHtml = srvs.map(s => `
+          <div class="fc-ip-row" data-copy="${s.ip}" style="cursor:pointer;position:relative">
+            <div class="fc-ip-dot" style="background:${tc.color}"></div>
+            <span style="font-family:monospace;font-size:13px">${s.ip}</span>
+            ${s.doa ? '<span class="lpill lpill-doa" style="font-size:10px;padding:2px 7px;margin-left:auto"><i class="ti ti-alert-triangle"></i>DOA</span>' : ''}
+            <span class="copy-tip">Copied!</span>
+          </div>`).join('');
+        return `<div class="fc-type-card" style="border-color:${tc.border}">
+          <div class="fc-type-hd" style="background:${tc.bg};color:${tc.color}">
+            <i class="ti ${tc.icon}" style="font-size:16px"></i>${type}
+            <span style="margin-left:auto;font-size:11px;opacity:0.65;font-weight:700">${srvs.length} server${srvs.length>1?'s':''}</span>
+          </div>
+          <div class="fc-type-ips">${ipsHtml}</div>
+        </div>`;
+      }).join('');
+      return `<div class="fc-floor-item">
+        <div class="fc-floor-hd">
+          <span class="lpill lpill-f" style="font-size:14px;font-weight:800;padding:6px 18px"><i class="ti ti-layers-subtract"></i>${floor}</span>
+        </div>
+        <div class="fc-type-row">${cardsHtml}</div>
+      </div>`;
+    }).join('');
+    return `<div class="fc-bldg" style="animation-delay:${bi*0.1}s">
+      <div class="fc-bldg-hd">
+        <span class="lpill lpill-b" style="font-size:16px;font-weight:800;padding:8px 22px"><i class="ti ti-building"></i>${bldg}</span>
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+      </div>
+      <div class="fc-floors">${floorsHtml}</div>
+    </div>`;
+  }).join('');
+
+  const legend = `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:12px 18px;margin-bottom:24px">
+    <span style="font-size:12px;font-weight:700;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-right:4px">Legend</span>
+    <span style="display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:6px;font-size:13px;font-weight:700;background:rgba(91,141,238,0.10);color:#5b8dee;border:1px solid rgba(91,141,238,0.35)"><i class="ti ti-eye"></i>Monitor</span>
+    <span style="display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:6px;font-size:13px;font-weight:700;background:rgba(232,168,56,0.10);color:#e8a838;border:1px solid rgba(232,168,56,0.35)"><i class="ti ti-wifi"></i>PXE</span>
+    <span style="display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:6px;font-size:13px;font-weight:700;background:rgba(76,175,125,0.10);color:#4caf7d;border:1px solid rgba(76,175,125,0.35)"><i class="ti ti-file-text"></i>Log</span>
+    <span style="display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:6px;font-size:13px;font-weight:700;background:var(--red-soft);color:var(--red);border:1px solid rgba(224,92,106,0.3)"><i class="ti ti-alert-triangle"></i>DOA</span>
+  </div>`;
+  document.getElementById('map-content').innerHTML = legend + (html || `<div class="empty"><i class="ti ti-hierarchy-off"></i><p>No server data.</p></div>`);
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  ['search','server','overview','map'].forEach(t => {
+    document.getElementById('tab-'+t).classList.toggle('active', t===tab);
+  });
+  document.getElementById('panel-'+tab).classList.add('active');
+  if (tab==='server') renderServerSearch();
+  if (tab==='overview') renderOverview();
+  if (tab==='map') renderServerMap();
+}
+
+// DOA filter state
+let doaOnly = false;
+function toggleDoa(el) {
+  doaOnly = !doaOnly;
+  el.classList.toggle('on', doaOnly);
+  renderSearch();
+}
+let srvDoaOnly = false;
+function toggleSrvDoa(el) {
+  srvDoaOnly = !srvDoaOnly;
+  el.classList.toggle('on', srvDoaOnly);
+  renderServerSearch();
+}
+
+// Copy to clipboard
+function copyText(text, el) {
+  navigator.clipboard.writeText(text).catch(() => {});
+  const tip = el.querySelector('.copy-tip');
+  if (!tip) return;
+  tip.classList.add('show');
+  setTimeout(() => tip.classList.remove('show'), 1400);
+}
+document.addEventListener('click', e => {
+  const pn = e.target.closest('.pn-tag[data-copy]');
+  if (pn) { copyText(pn.dataset.copy, pn); return; }
+  const chip = e.target.closest('.srv-chip[data-copy]');
+  if (chip) { copyText(chip.dataset.copy, chip); return; }
+  const row = e.target.closest('.fc-ip-row[data-copy]');
+  if (row) { copyText(row.dataset.copy, row); return; }
+});
+
+updateTimestamp();
+renderSearch();
+
+// ===== ADMIN =====
+const CRED = {u:'admin', p:'meta1234'}; // ← change credentials here
+let adminLoggedIn = false;
+let pnTags = [];
+
+function handleAdminBtn() {
+  if (adminLoggedIn) { openAdmin(); }
+  else { openLoginModal(); }
+}
+
+// --- Login ---
+function openLoginModal() {
+  document.getElementById('login-user').value = '';
+  document.getElementById('login-pass').value = '';
+  document.getElementById('login-err').style.display = 'none';
+  document.getElementById('login-modal').style.display = 'flex';
+  setTimeout(() => document.getElementById('login-user').focus(), 50);
+}
+function closeLoginModal() { document.getElementById('login-modal').style.display = 'none'; }
+function doLogin() {
+  const u = document.getElementById('login-user').value.trim();
+  const p = document.getElementById('login-pass').value;
+  if (u === CRED.u && p === CRED.p) {
+    adminLoggedIn = true;
+    closeLoginModal();
+    const btn = document.getElementById('admin-lock');
+    btn.classList.add('active');
+    btn.querySelector('i').className = 'ti ti-lock-open';
+    openAdmin();
+  } else {
+    document.getElementById('login-err').style.display = 'block';
+  }
+}
+
+// --- Admin panel ---
+function openAdmin() {
+  document.getElementById('admin-panel').style.display = 'flex';
+  switchATab('submodels');
+}
+function closeAdmin() { document.getElementById('admin-panel').style.display = 'none'; }
+function adminLogout() {
+  adminLoggedIn = false;
+  const btn = document.getElementById('admin-lock');
+  btn.classList.remove('active');
+  btn.querySelector('i').className = 'ti ti-lock';
+  closeAdmin();
+}
+function switchATab(tab) {
+  ['submodels','servers'].forEach(t => {
+    document.getElementById('atab-'+t).classList.toggle('active', t===tab);
+    document.getElementById('asec-'+t).style.display = t===tab ? 'block' : 'none';
+  });
+  if (tab==='submodels') renderAdminSm();
+  if (tab==='servers') renderAdminSrv();
+}
+function renderAdminSm() {
+  document.getElementById('admin-sm-tbody').innerHTML = DATA.map((d, i) => {
+    const mc = MC[d.model];
+    return `<tr>
+      <td><span style="background:${mc.soft};color:${mc.color};border:1.5px solid ${mc.color}55;padding:3px 10px;border-radius:5px;font-size:12px;font-weight:800">${d.model}</span></td>
+      <td style="color:var(--text);font-weight:600">${d.submodel}</td>
+      <td>${d.pns.length}</td>
+      <td>${d.servers.length}</td>
+      <td><div class="row-acts">
+        <button class="btn btn-ghost btn-sm" onclick="openSmEdit(${i})"><i class="ti ti-edit"></i> Edit</button>
+        <button class="btn btn-red btn-sm" onclick="deleteSm(${i})"><i class="ti ti-trash"></i></button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+function renderAdminSrv() {
+  document.getElementById('admin-srv-tbody').innerHTML = Object.entries(SERVERS).map(([ip, s]) => {
+    return `<tr>
+      <td style="color:var(--text);font-weight:700">${ip}</td>
+      <td><span class="srv-chip ${srvTypeClass(s.type)}" style="font-size:12px"><i class="ti ${srvTypeIcon(s.type)}"></i>${s.type}</span></td>
+      <td>${s.building}</td>
+      <td>${s.floor}</td>
+      <td>${s.doa ? '<span class="lpill lpill-doa" style="font-size:11px;padding:3px 8px"><i class="ti ti-alert-triangle"></i>DOA</span>' : '-'}</td>
+      <td><div class="row-acts">
+        <button class="btn btn-ghost btn-sm" onclick="openSrvEdit('${ip}')"><i class="ti ti-edit"></i> Edit</button>
+        <button class="btn btn-red btn-sm" onclick="deleteSrv('${ip}')"><i class="ti ti-trash"></i></button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+// --- PN tag input ---
+function pnKeydown(e) {
+  if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addPnTag(e.target.value.trim()); }
+  if (e.key === 'Backspace' && !e.target.value && pnTags.length) { pnTags.pop(); refreshPnTags(); }
+}
+function pnInputChk(e) { if (e.target.value.endsWith(',')) addPnTag(e.target.value.slice(0, -1).trim()); }
+function addPnTag(val) {
+  if (!val) return;
+  val.split(/[\s,]+/).filter(Boolean).forEach(v => { if (!pnTags.includes(v)) pnTags.push(v); });
+  document.getElementById('pn-ti').value = '';
+  refreshPnTags();
+}
+function removePnTag(i) { pnTags.splice(i, 1); refreshPnTags(); }
+function refreshPnTags() {
+  const wrap = document.getElementById('pn-tag-wrap');
+  const input = document.getElementById('pn-ti');
+  wrap.innerHTML = '';
+  pnTags.forEach((t, i) => {
+    const el = document.createElement('span');
+    el.className = 'tag-item';
+    el.innerHTML = `${t}<span class="tag-x" onclick="removePnTag(${i})">×</span>`;
+    wrap.appendChild(el);
+  });
+  wrap.appendChild(input);
+}
+
+// --- Server checkboxes ---
+function buildSrvChk(selected) {
+  document.getElementById('srv-chk-row').innerHTML = Object.keys(SERVERS).map(ip => {
+    const s = SERVERS[ip];
+    const chk = selected.includes(ip);
+    return `<div class="chk-pill${chk ? ' checked' : ''}" id="chk-${ip.replace(/\./g,'_')}" onclick="toggleSrvChk('${ip}')">
+      <i class="ti ${srvTypeIcon(s.type)}" style="font-size:12px"></i>${ip}
+    </div>`;
+  }).join('');
+}
+function toggleSrvChk(ip) {
+  document.getElementById('chk-' + ip.replace(/\./g, '_')).classList.toggle('checked');
+}
+function getCheckedSrvs() {
+  return Object.keys(SERVERS).filter(ip => {
+    const el = document.getElementById('chk-' + ip.replace(/\./g, '_'));
+    return el && el.classList.contains('checked');
+  });
+}
+
+// --- Submodel modal ---
+function openSmAdd() {
+  pnTags = [];
+  document.getElementById('sm-modal-title').innerHTML = '<i class="ti ti-plus"></i> Add Submodel';
+  document.getElementById('sm-edit-idx').value = '-1';
+  document.getElementById('sm-model').value = 'F0S';
+  document.getElementById('sm-name').value = '';
+  refreshPnTags();
+  buildSrvChk([]);
+  document.getElementById('sm-modal').style.display = 'flex';
+  setTimeout(() => document.getElementById('sm-name').focus(), 50);
+}
+function openSmEdit(i) {
+  const d = DATA[i];
+  pnTags = [...d.pns];
+  document.getElementById('sm-modal-title').innerHTML = '<i class="ti ti-edit"></i> Edit Submodel';
+  document.getElementById('sm-edit-idx').value = i;
+  document.getElementById('sm-model').value = d.model;
+  document.getElementById('sm-name').value = d.submodel;
+  refreshPnTags();
+  buildSrvChk(d.servers);
+  document.getElementById('sm-modal').style.display = 'flex';
+}
+function closeSmModal() { document.getElementById('sm-modal').style.display = 'none'; }
+function saveSmModal() {
+  const remain = document.getElementById('pn-ti').value.trim();
+  if (remain) addPnTag(remain);
+  const entry = {
+    model: document.getElementById('sm-model').value,
+    submodel: document.getElementById('sm-name').value.trim(),
+    pns: [...pnTags],
+    servers: getCheckedSrvs()
+  };
+  if (!entry.submodel) { alert('Submodel name is required'); return; }
+  const idx = parseInt(document.getElementById('sm-edit-idx').value);
+  if (idx === -1) { DATA.push(entry); } else { DATA[idx] = entry; }
+  saveData(); closeSmModal(); renderAdminSm();
+}
+function deleteSm(i) {
+  if (!confirm(`Delete "${DATA[i].submodel}"?`)) return;
+  DATA.splice(i, 1); saveData(); renderAdminSm();
+}
+
+// --- Server modal ---
+function openSrvAdd() {
+  document.getElementById('srv-modal-title').innerHTML = '<i class="ti ti-plus"></i> Add Server';
+  document.getElementById('srv-edit-ip').value = '';
+  document.getElementById('srv-ip').value = '';
+  document.getElementById('srv-ip').readOnly = false;
+  document.getElementById('srv-type').value = 'Monitor';
+  document.getElementById('srv-building').value = '';
+  document.getElementById('srv-floor').value = '';
+  document.getElementById('srv-doa').checked = false;
+  document.getElementById('srv-modal').style.display = 'flex';
+  setTimeout(() => document.getElementById('srv-ip').focus(), 50);
+}
+function openSrvEdit(ip) {
+  const s = SERVERS[ip];
+  document.getElementById('srv-modal-title').innerHTML = '<i class="ti ti-edit"></i> Edit Server';
+  document.getElementById('srv-edit-ip').value = ip;
+  document.getElementById('srv-ip').value = ip;
+  document.getElementById('srv-ip').readOnly = true;
+  document.getElementById('srv-type').value = s.type;
+  document.getElementById('srv-building').value = s.building;
+  document.getElementById('srv-floor').value = s.floor;
+  document.getElementById('srv-doa').checked = !!s.doa;
+  document.getElementById('srv-modal').style.display = 'flex';
+}
+function closeSrvModal() { document.getElementById('srv-modal').style.display = 'none'; }
+function saveSrvModal() {
+  const origIp = document.getElementById('srv-edit-ip').value;
+  const ip = document.getElementById('srv-ip').value.trim();
+  if (!ip) { alert('IP address is required'); return; }
+  const entry = {
+    type: document.getElementById('srv-type').value,
+    building: document.getElementById('srv-building').value.trim(),
+    floor: document.getElementById('srv-floor').value.trim()
+  };
+  if (document.getElementById('srv-doa').checked) entry.doa = true;
+  if (origIp && origIp !== ip) delete SERVERS[origIp];
+  SERVERS[ip] = entry;
+  saveData(); closeSrvModal(); renderAdminSrv();
+}
+function deleteSrv(ip) {
+  if (!confirm(`Delete server ${ip}?`)) return;
+  delete SERVERS[ip]; saveData(); renderAdminSrv();
+}
+</script>
+</body>
+</html>
