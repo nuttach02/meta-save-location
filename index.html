@@ -630,13 +630,10 @@ async function saveData() {
   try {
     await pushToFirestore();
     localStorage.setItem('meta_updated', new Date().toISOString());
-    showSyncBadge('ok');
   } catch(e) {
     console.warn('Firestore save failed:', e);
     showSyncBadge('offline');
   }
-  updateTimestamp();
-  renderSearch();
 }
 
 async function pushToFirestore() {
@@ -647,24 +644,23 @@ async function pushToFirestore() {
   });
 }
 
-async function loadFromFirestore() {
+function subscribeFirestore() {
   showSyncBadge('syncing');
-  try {
-    const snap = await DOC.get();
+  DOC.onSnapshot(snap => {
     if (snap.exists) {
       const d = snap.data();
       if (d.servers)   SERVERS = d.servers;
       if (d.submodels) DATA    = d.submodels;
     } else {
-      await pushToFirestore();
+      pushToFirestore();
     }
     showSyncBadge('ok');
-  } catch(e) {
-    console.warn('Firestore load failed, using defaults:', e);
+    updateTimestamp();
+    renderSearch();
+  }, err => {
+    console.warn('Firestore snapshot error:', err);
     showSyncBadge('offline');
-  }
-  updateTimestamp();
-  renderSearch();
+  });
 }
 
 function showSyncBadge(state) {
@@ -1145,7 +1141,7 @@ document.addEventListener('click', e => {
   if (row) { copyUNC(row.dataset.open, row); return; }
 });
 
-loadFromFirestore();
+subscribeFirestore();
 
 // ===== THEME =====
 function toggleTheme() {
