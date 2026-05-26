@@ -8,10 +8,5 @@ if "%~1"=="" (
     echo now click ip in web 
     pause
 ) else (
-    setlocal
-    set "arg=%~1"
-    set "ip=%arg:openunc://=%"
-    set "ip=%ip:openunc:=%"
-    start "" "\\%ip%"
-    endlocal
+    powershell -noprofile -windowstyle hidden -command "$ip='%~1' -replace 'openunc:[/]*',''; explorer.exe ('\\' + $ip)"
 )
