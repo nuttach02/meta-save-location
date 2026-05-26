@@ -437,7 +437,7 @@ html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Pl
       <div class="form-group">
         <label class="form-label">Type</label>
         <select class="form-ctrl" id="srv-type" style="cursor:pointer">
-          <option>Monitor</option><option>PXE</option><option>PXE02</option><option>PXE03</option><option>PXE04</option><option>PXE05</option><option>Log</option>
+          <option>Monitor</option><option>PXE</option><option>PXE1</option><option>PXE02</option><option>PXE03</option><option>PXE04</option><option>PXE05</option><option>Log</option>
         </select>
       </div>
       <div class="form-group">
@@ -491,6 +491,10 @@ html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Pl
     <div class="admin-section" id="asec-servers" style="display:none">
       <div class="admin-sec-head">
         <div class="admin-sec-ttl">Servers</div>
+        <div style="position:relative;margin-left:auto">
+          <i class="ti ti-search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:14px;pointer-events:none"></i>
+          <input type="text" id="admin-srv-search" placeholder="Search IP, type, building…" oninput="renderAdminSrv()" style="font-size:13px;padding:9px 14px 9px 38px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);width:240px">
+        </div>
         <button class="btn btn-primary btn-sm" onclick="openSrvAdd()"><i class="ti ti-plus"></i> Add Server</button>
       </div>
       <table class="atable">
@@ -930,7 +934,7 @@ function renderServerMap() {
     Log:     {color:'#4caf7d', bg:'rgba(76,175,125,0.10)', border:'rgba(76,175,125,0.35)', icon:'ti-file-text'},
   };
   const getTC = t => TC[t] || (t && t.startsWith('PXE') ? TC['PXE'] : TC['Monitor']);
-  const TYPE_ORDER = ['Monitor','PXE','PXE02','PXE03','PXE04','PXE05','Log'];
+  const TYPE_ORDER = ['Monitor','PXE','PXE1','PXE02','PXE03','PXE04','PXE05','Log'];
 
   // Build: building → floor → type → [{ip, doa}]
   const bldgMap = new Map();
@@ -1117,7 +1121,11 @@ function renderAdminSm() {
   }).join('');
 }
 function renderAdminSrv() {
-  document.getElementById('admin-srv-tbody').innerHTML = Object.entries(SERVERS).map(([ip, s]) => {
+  const q = (document.getElementById('admin-srv-search')?.value || '').toLowerCase();
+  document.getElementById('admin-srv-tbody').innerHTML = Object.entries(SERVERS).filter(([ip, s]) => {
+    if (!q) return true;
+    return ip.includes(q) || s.type.toLowerCase().includes(q) || s.building.toLowerCase().includes(q) || s.floor.toLowerCase().includes(q);
+  }).map(([ip, s]) => {
     return `<tr>
       <td style="color:var(--text);font-weight:700">${ip}</td>
       <td><span class="srv-chip ${srvTypeClass(s.type)}" style="font-size:12px"><i class="ti ${srvTypeIcon(s.type)}"></i>${s.type}</span></td>
