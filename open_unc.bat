@@ -12,6 +12,6 @@ if "%~1"=="" (
     set "arg=%~1"
     set "ip=%arg:openunc://=%"
     set "ip=%ip:openunc:=%"
-    start "" explorer.exe \\%ip%
+    start "" "\\%ip%"
     endlocal
 )
