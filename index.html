@@ -138,6 +138,9 @@ html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Pl
 .pn-tag.hi{background:rgba(91,141,238,0.15);border-color:rgba(91,141,238,0.4);color:#a0bdf5}
 .pn-tag.has-path{border-color:rgba(76,175,125,0.6);color:var(--green);box-shadow:0 0 6px rgba(76,175,125,0.35)}
 .pn-tag.has-path:hover{border-color:var(--green);box-shadow:0 0 10px rgba(76,175,125,0.55)}
+#pn-path-popup{position:fixed;z-index:9999;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.35);overflow:hidden;min-width:240px;display:none}
+.pn-path-opt{padding:9px 14px;cursor:pointer;font-size:12px;color:var(--text2);display:flex;gap:8px;align-items:center;font-family:monospace}
+.pn-path-opt:hover{background:var(--surface3);color:var(--green)}
 .sm-related{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
 .rel-chip{font-size:11px;font-weight:700;padding:3px 9px;background:var(--surface3);border-radius:20px;border:1px solid var(--border);color:var(--text3);cursor:pointer;transition:all 0.15s;user-select:none}
 .rel-chip:hover{border-color:var(--accent);color:var(--accent)}
@@ -511,6 +514,8 @@ html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Pl
   </div>
 </div>
 
+<div id="pn-path-popup"></div>
+
 <script>
 const MC = {
   'F0S':  {color:'#5b8dee', soft:'rgba(91,141,238,0.15)',  text:'#fff'},
@@ -824,12 +829,19 @@ function renderSearch() {
         const mc = MC[d.model];
         const pnHtml = d.pns.map(pn => {
           const hi = q && pn.toLowerCase().includes(q);
-          const path = d.pnPaths && d.pnPaths[pn];
-          if (path) {
-            const safeP = path.replace(/"/g, '&quot;');
-            return `<span class="pn-tag has-path${hi ? ' hi' : ''}" data-path="${safeP}" style="cursor:pointer;position:relative">${pn}<span class="copy-tip">กำลังเปิด folder...</span></span>`;
+          const pd = d.pnPaths && d.pnPaths[pn];
+          if (pd) {
+            const norm = typeof pd === 'string' ? {mode:'same', path:pd} : pd;
+            if (norm.mode === 'same' && norm.path) {
+              const safeP = norm.path.replace(/"/g,'&quot;');
+              return `<span class="pn-tag has-path${hi?' hi':''}" data-path="${safeP}" style="cursor:pointer;position:relative">${pn}<span class="copy-tip">กำลังเปิด folder...</span></span>`;
+            }
+            if (norm.mode === 'per-server' && norm.paths && Object.keys(norm.paths).length) {
+              const safePaths = JSON.stringify(norm.paths).replace(/"/g,'&quot;');
+              return `<span class="pn-tag has-path${hi?' hi':''}" data-paths="${safePaths}" style="cursor:pointer;position:relative">${pn}<span class="copy-tip">เลือก server...</span></span>`;
+            }
           }
-          return `<span class="pn-tag${hi ? ' hi' : ''}" data-copy="${pn}" style="cursor:pointer;position:relative">${pn}<span class="copy-tip">Copied!</span></span>`;
+          return `<span class="pn-tag${hi?' hi':''}" data-copy="${pn}" style="cursor:pointer;position:relative">${pn}<span class="copy-tip">Copied!</span></span>`;
         }).join('');
         return `<div class="sm-row">
           <span class="mbadge" style="background:${mc.soft};color:${mc.color};border:1.5px solid ${mc.color}55;flex-shrink:0;margin-top:1px">${d.model}</span>
@@ -1055,11 +1067,25 @@ function copyText(text, el) {
   tip.classList.add('show');
   setTimeout(() => tip.classList.remove('show'), 1400);
 }
-function openPNPath(path, el) {
+function openPNPath(path) {
   const normalized = path.replace(/^\\\\/, '').replace(/\\/g, '/');
   window.location.href = 'openunc:' + normalized;
-  const tip = el.querySelector('.copy-tip');
-  if (tip) { tip.classList.add('show'); setTimeout(() => tip.classList.remove('show'), 2000); }
+}
+function showPNPathPopup(pathsObj, el) {
+  const popup = document.getElementById('pn-path-popup');
+  const entries = Object.entries(pathsObj).filter(([,p]) => p);
+  popup.innerHTML = entries.map(([ip, p]) =>
+    `<div class="pn-path-opt" onclick="openPNPath('${p.replace(/'/g,"\\'").replace(/\\/g,'\\\\') }');document.getElementById('pn-path-popup').style.display='none'">
+      <i class="ti ti-server" style="font-size:13px;flex-shrink:0"></i>
+      <span style="color:var(--text3);margin-right:2px">${ip}</span>
+      <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p}</span>
+    </div>`
+  ).join('');
+  const rect = el.getBoundingClientRect();
+  popup.style.display = 'block';
+  popup.style.top = (rect.bottom + 6) + 'px';
+  const left = Math.min(rect.left, window.innerWidth - popup.offsetWidth - 8);
+  popup.style.left = Math.max(8, left) + 'px';
 }
 function copyUNC(ip, el) {
   window.location.href = 'openunc:' + ip;
@@ -1069,8 +1095,14 @@ function copyUNC(ip, el) {
   setTimeout(() => tip.classList.remove('show'), 2000);
 }
 document.addEventListener('click', e => {
+  const popup = document.getElementById('pn-path-popup');
+  if (popup && !popup.contains(e.target) && !e.target.closest('.pn-tag[data-paths]')) {
+    popup.style.display = 'none';
+  }
+  const pnPaths_ = e.target.closest('.pn-tag[data-paths]');
+  if (pnPaths_) { showPNPathPopup(JSON.parse(pnPaths_.dataset.paths), pnPaths_); return; }
   const pnPath = e.target.closest('.pn-tag[data-path]');
-  if (pnPath) { openPNPath(pnPath.dataset.path, pnPath); return; }
+  if (pnPath) { openPNPath(pnPath.dataset.path); const tip=pnPath.querySelector('.copy-tip'); if(tip){tip.classList.add('show');setTimeout(()=>tip.classList.remove('show'),2000);} return; }
   const pn = e.target.closest('.pn-tag[data-copy]');
   if (pn) { copyText(pn.dataset.copy, pn); return; }
   const chip = e.target.closest('.srv-chip[data-open]');
@@ -1201,18 +1233,49 @@ function refreshPnTags() {
   wrap.appendChild(input);
   refreshPnPaths();
 }
+function setPnMode(pn, mode) {
+  if (!pnPaths[pn]) pnPaths[pn] = {};
+  pnPaths[pn].mode = mode;
+  refreshPnPaths();
+}
 function refreshPnPaths() {
   const sec = document.getElementById('pn-paths-section');
   const rows = document.getElementById('pn-paths-rows');
   if (!sec || !rows) return;
   if (!pnTags.length) { sec.style.display = 'none'; return; }
   sec.style.display = 'block';
+  const servers = [...srvChkSel];
   rows.innerHTML = pnTags.map(pn => {
-    const val = (pnPaths[pn] || '').replace(/"/g, '&quot;');
-    return `<div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
-      <span style="font-family:monospace;font-size:12px;font-weight:700;color:var(--text2);min-width:150px;flex-shrink:0">${pn}</span>
-      <input type="text" class="form-ctrl" style="font-size:12px;padding:7px 10px" placeholder="\\\\server\\share\\folder"
-        value="${val}" oninput="pnPaths['${pn}']=this.value.trim()">
+    const raw = pnPaths[pn];
+    const norm = !raw ? {mode:'same',path:''} : typeof raw === 'string' ? {mode:'same',path:raw} : raw;
+    const isSame = norm.mode !== 'per-server';
+    const btnBase = 'font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;cursor:pointer;border:1px solid;transition:all 0.15s;';
+    const btnSame = isSame
+      ? `${btnBase}background:var(--accent);border-color:var(--accent);color:#fff`
+      : `${btnBase}background:transparent;border-color:var(--border);color:var(--text3)`;
+    const btnSrv = !isSame
+      ? `${btnBase}background:var(--green);border-color:var(--green);color:#fff`
+      : `${btnBase}background:transparent;border-color:var(--border);color:var(--text3)`;
+    const inputsHtml = isSame
+      ? `<input type="text" class="form-ctrl" style="font-size:12px;padding:7px 10px;margin-top:6px" placeholder="\\\\server\\share\\folder"
+           value="${(norm.path||'').replace(/"/g,'&quot;')}"
+           oninput="if(!pnPaths['${pn}'])pnPaths['${pn}']={mode:'same'};pnPaths['${pn}'].path=this.value.trim()">`
+      : servers.map(ip => {
+          const v = ((norm.paths||{})[ip]||'').replace(/"/g,'&quot;');
+          return `<div style="display:flex;gap:8px;align-items:center;margin-top:5px">
+            <span style="font-family:monospace;font-size:11px;color:var(--text3);min-width:120px;flex-shrink:0">${ip}</span>
+            <input type="text" class="form-ctrl" style="font-size:12px;padding:6px 10px" placeholder="\\\\${ip}\\share\\folder"
+              value="${v}"
+              oninput="if(!pnPaths['${pn}'])pnPaths['${pn}']={mode:'per-server',paths:{}};if(!pnPaths['${pn}'].paths)pnPaths['${pn}'].paths={};pnPaths['${pn}'].paths['${ip}']=this.value.trim()">
+          </div>`;
+        }).join('');
+    return `<div style="background:var(--surface3);border-radius:8px;padding:10px 12px;margin-bottom:8px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-family:monospace;font-size:12px;font-weight:700;color:var(--text);flex:1">${pn}</span>
+        <button style="${btnSame}" onclick="setPnMode('${pn}','same')">Same path</button>
+        <button style="${btnSrv}" onclick="setPnMode('${pn}','per-server')">Per server</button>
+      </div>
+      ${inputsHtml}
     </div>`;
   }).join('');
 }
@@ -1262,7 +1325,11 @@ function openSmAdd() {
 function openSmEdit(i) {
   const d = DATA[i];
   pnTags = [...d.pns];
-  pnPaths = {...(d.pnPaths || {})};
+  const raw = d.pnPaths || {};
+  pnPaths = {};
+  Object.entries(raw).forEach(([pn, v]) => {
+    pnPaths[pn] = typeof v === 'string' ? {mode:'same', path:v} : v;
+  });
   document.getElementById('sm-modal-title').innerHTML = '<i class="ti ti-edit"></i> Edit Submodel';
   document.getElementById('sm-edit-idx').value = i;
   document.getElementById('sm-model').value = d.model;
@@ -1276,7 +1343,16 @@ function saveSmModal() {
   const remain = document.getElementById('pn-ti').value.trim();
   if (remain) addPnTag(remain);
   const filteredPaths = {};
-  pnTags.forEach(pn => { if (pnPaths[pn]) filteredPaths[pn] = pnPaths[pn]; });
+  pnTags.forEach(pn => {
+    const v = pnPaths[pn];
+    if (!v) return;
+    const norm = typeof v === 'string' ? {mode:'same', path:v} : v;
+    if (norm.mode === 'same' && norm.path) filteredPaths[pn] = norm;
+    else if (norm.mode === 'per-server') {
+      const cleaned = Object.fromEntries(Object.entries(norm.paths||{}).filter(([,p])=>p));
+      if (Object.keys(cleaned).length) filteredPaths[pn] = {mode:'per-server', paths: cleaned};
+    }
+  });
   const entry = {
     model: document.getElementById('sm-model').value,
     submodel: document.getElementById('sm-name').value.trim(),
