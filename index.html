@@ -51,7 +51,7 @@
   --green-soft:rgba(46,158,98,0.12);
   --amber:#c47f0a;
   --amber-soft:rgba(196,127,10,0.1);
-  --red:#c0394a;
+  --red:#33292a;
   --red-soft:rgba(192,57,74,0.1);
   --purple:#7c52d0;
   --purple-soft:rgba(124,82,208,0.12);
@@ -1005,11 +1005,12 @@ function renderOverview() {
   const totalSrv = Object.keys(SERVERS).length;
   const buildings = [...new Set(Object.values(SERVERS).map(s=>s.building))];
   const stats = `<div class="stats-grid">
+    <div class="stat-box" style="animation-delay:0.2s"><div class="stat-num" style="color:#e8a838">${buildings.length}</div><div class="stat-lbl">Buildings</div></div>
     <div class="stat-box" style="animation-delay:0s"><div class="stat-num" style="color:#5b8dee">5</div><div class="stat-lbl">Models</div></div>
     <div class="stat-box" style="animation-delay:0.05s"><div class="stat-num" style="color:#9b72e8">${DATA.length}</div><div class="stat-lbl">Submodels</div></div>
     <div class="stat-box" style="animation-delay:0.1s"><div class="stat-num" style="color:#4caf7d">${totalPNs}</div><div class="stat-lbl">Part Nos</div></div>
-    <div class="stat-box" style="animation-delay:0.15s"><div class="stat-num" style="color:#e8a838">${totalSrv}</div><div class="stat-lbl">Servers</div></div>
-    <div class="stat-box" style="animation-delay:0.2s"><div class="stat-num" style="color:#e05c6a">${buildings.length}</div><div class="stat-lbl">Buildings</div></div>
+    <div class="stat-box" style="animation-delay:0.15s"><div class="stat-num" style="color:#4a5270">${totalSrv}</div><div class="stat-lbl">Servers</div></div>
+    
   </div>`;
   const byBuilding = groupByBuilding(buildLocMap(DATA));
   const locView = [...byBuilding.entries()].map(([bldg, floors], bi) => {
