@@ -670,7 +670,7 @@ function srvChipHtml(ip) {
   const base = s ? `${srvTypeClass(s.type)}` : 'sc-monitor';
   const icon = s ? `ti ${srvTypeIcon(s.type)}` : 'ti ti-server';
   const label = s ? `${ip} <span style="opacity:0.6;font-size:11px">${s.type}</span>` : ip;
-  return `<div class="srv-chip ${base}" data-copy="\\\\${ip}" style="cursor:pointer;position:relative"><i class="${icon}"></i>${label}<span class="copy-tip">\\\\${ip}</span></div>`;
+  return `<div class="srv-chip ${base}" data-open="${ip}" style="cursor:pointer;position:relative"><i class="${icon}"></i>${label}<span class="copy-tip">กำลังเปิด \\\\${ip}</span></div>`;
 }
 
 let activeChips = new Set(['all']);
@@ -1035,8 +1035,8 @@ function copyUNC(ip, el) {
 document.addEventListener('click', e => {
   const pn = e.target.closest('.pn-tag[data-copy]');
   if (pn) { copyText(pn.dataset.copy, pn); return; }
-  const chip = e.target.closest('.srv-chip[data-copy]');
-  if (chip) { copyText(chip.dataset.copy, chip); return; }
+  const chip = e.target.closest('.srv-chip[data-open]');
+  if (chip) { copyUNC(chip.dataset.open, chip); return; }
   const row = e.target.closest('.fc-ip-row[data-open]');
   if (row) { copyUNC(row.dataset.open, row); return; }
 });
