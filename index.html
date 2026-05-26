@@ -864,7 +864,7 @@ function renderServerSearch() {
         <i class="ti ti-server" style="font-size:22px;color:#5b8dee"></i>
         <span class="srv-ip" style="cursor:pointer;position:relative" onclick="copyUNC('${ip}',this)">
           ${ip}
-          <span class="copy-tip">\\\\${ip} — Win+R แล้ว Enter</span>
+          <span class="copy-tip">กำลังเปิด \\\\${ip}</span>
         </span>
         <span class="srv-chip ${typePillClass}" style="font-size:13px;padding:5px 14px">
           <i class="ti ${srvTypeIcon(s.type)}"></i>${s.type}
@@ -1026,7 +1026,7 @@ function copyText(text, el) {
   setTimeout(() => tip.classList.remove('show'), 1400);
 }
 function copyUNC(ip, el) {
-  navigator.clipboard.writeText('\\\\' + ip).catch(() => {});
+  window.location.href = 'openunc:' + ip;
   const tip = el.querySelector('.copy-tip');
   if (!tip) return;
   tip.classList.add('show');
