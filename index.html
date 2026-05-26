@@ -363,7 +363,6 @@ html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Pl
           <div class="chip chip-f0es"    id="chip-f0es" onclick="toggleChip('f0es')">F0ES</div>
           <div class="chip chip-xg1"     id="chip-xg1"  onclick="toggleChip('xg1')">XG1</div>
           <div class="chip chip-f0ej"    id="chip-f0ej" onclick="toggleChip('f0ej')">F0EJ</div>
-          <div class="chip chip-doa"     id="chip-doa"  onclick="toggleDoa(this)">⚠ DOA</div>
         </div>
         <div class="result-count" id="search-count"></div>
       </div>
@@ -384,7 +383,6 @@ html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Pl
         <i class="ti ti-server input-icon"></i>
       </div>
       <div class="row-between">
-        <div><div class="chip chip-doa" id="chip-srv-doa" onclick="toggleSrvDoa(this)">⚠ DOA Only</div></div>
         <div class="result-count" id="server-count"></div>
       </div>
     </div>
@@ -834,9 +832,6 @@ function goRelated(name) {
     const el = document.getElementById('chip-'+c);
     if (el) el.className = 'chip chip-'+c + (c==='all' ? ' on' : '');
   });
-  doaOnly = false;
-  const doaEl = document.getElementById('chip-doa');
-  if (doaEl) doaEl.classList.remove('on');
   renderSearch();
 }
 
@@ -891,7 +886,6 @@ function renderSearch() {
     return d.submodel.toLowerCase().includes(q) || d.pns.some(p => p.toLowerCase().includes(q));
   });
   if (activeSubmodel) filtered = filtered.filter(d => d.submodel === activeSubmodel);
-  if (doaOnly) filtered = filtered.filter(d => d.servers.some(ip => SERVERS[ip]?.doa));
   document.getElementById('search-count').textContent = filtered.length + ' result' + (filtered.length !== 1 ? 's' : '');
   const el = document.getElementById('search-results');
   if (!filtered.length) {
@@ -949,7 +943,7 @@ function renderSearch() {
 
 function renderServerSearch() {
   const q = (document.getElementById('server-search').value || '').trim();
-  const ips = Object.keys(SERVERS).filter(ip => !q || ip.includes(q)).filter(ip => !srvDoaOnly || SERVERS[ip]?.doa);
+  const ips = Object.keys(SERVERS).filter(ip => !q || ip.includes(q));
   document.getElementById('server-count').textContent = ips.length + ' server' + (ips.length !== 1 ? 's' : '');
   const el = document.getElementById('server-results');
   if (!ips.length) {
@@ -1122,19 +1116,6 @@ function switchTab(tab) {
   if (tab==='map') renderServerMap();
 }
 
-// DOA filter state
-let doaOnly = false;
-function toggleDoa(el) {
-  doaOnly = !doaOnly;
-  el.classList.toggle('on', doaOnly);
-  renderSearch();
-}
-let srvDoaOnly = false;
-function toggleSrvDoa(el) {
-  srvDoaOnly = !srvDoaOnly;
-  el.classList.toggle('on', srvDoaOnly);
-  renderServerSearch();
-}
 
 // Copy to clipboard
 function copyText(text, el) {
