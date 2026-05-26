@@ -144,7 +144,8 @@ html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Pl
 .srv-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:16px;transition:all 0.25s;animation:fadeup 0.35s ease both}
 .srv-card:hover{border-color:var(--border2);box-shadow:0 6px 28px rgba(0,0,0,0.2)}
 .srv-card-head{padding:16px 20px;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.srv-ip{font-size:18px;font-weight:800;color:var(--text)}
+.srv-ip{font-size:18px;font-weight:800;color:var(--text);text-decoration:none;cursor:pointer}
+.srv-ip:hover{color:var(--accent);text-decoration:underline}
 .srv-type-pill{padding:5px 14px;border-radius:6px;font-size:13px;font-weight:700}
 .srv-loc-group{display:flex;gap:6px;margin-left:auto;flex-wrap:wrap}
 .srv-card-body{padding:18px 20px}
@@ -861,7 +862,7 @@ function renderServerSearch() {
     return `<div class="srv-card" style="animation-delay:${Math.min(i,8)*0.06}s">
       <div class="srv-card-head">
         <i class="ti ti-server" style="font-size:22px;color:#5b8dee"></i>
-        <span class="srv-ip">${ip}</span>
+        <a class="srv-ip" href="//${ip}" target="_blank">${ip}</a>
         <span class="srv-chip ${typePillClass}" style="font-size:13px;padding:5px 14px">
           <i class="ti ${srvTypeIcon(s.type)}"></i>${s.type}
         </span>
@@ -948,11 +949,11 @@ function renderServerMap() {
         if (!srvs.length) return '';
         const tc = getTC(type);
         const ipsHtml = srvs.map(s => `
-          <div class="fc-ip-row" data-copy="\\\\${s.ip}" style="cursor:pointer;position:relative">
+          <div class="fc-ip-row" data-open="${s.ip}" style="cursor:pointer;position:relative">
             <div class="fc-ip-dot" style="background:${tc.color}"></div>
             <span style="font-family:monospace;font-size:13px">${s.ip}</span>
             ${s.doa ? '<span class="lpill lpill-doa" style="font-size:10px;padding:2px 7px;margin-left:auto"><i class="ti ti-alert-triangle"></i>DOA</span>' : ''}
-            <span class="copy-tip">\\\\${s.ip}</span>
+            <span class="copy-tip">//${s.ip}</span>
           </div>`).join('');
         return `<div class="fc-type-card" style="border-color:${tc.border}">
           <div class="fc-type-hd" style="background:${tc.bg};color:${tc.color}">
@@ -1026,8 +1027,13 @@ document.addEventListener('click', e => {
   if (pn) { copyText(pn.dataset.copy, pn); return; }
   const chip = e.target.closest('.srv-chip[data-copy]');
   if (chip) { copyText(chip.dataset.copy, chip); return; }
-  const row = e.target.closest('.fc-ip-row[data-copy]');
-  if (row) { copyText(row.dataset.copy, row); return; }
+  const row = e.target.closest('.fc-ip-row[data-open]');
+  if (row) {
+    const tip = row.querySelector('.copy-tip');
+    if (tip) { tip.classList.add('show'); setTimeout(() => tip.classList.remove('show'), 1000); }
+    window.open('//' + row.dataset.open, '_blank');
+    return;
+  }
 });
 
 loadFromFirestore();
