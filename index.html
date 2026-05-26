@@ -315,9 +315,7 @@ html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Pl
     <div class="hbadge hbadge-green">● Live</div>
     <div class="hbadge" id="hbadge-sync" style="display:none"></div>
     <div class="hbadge" id="hbadge-updated" style="display:none;color:var(--text3);border-color:var(--border);background:transparent;font-size:12px;font-weight:600"></div>
-    <div class="admin-btn" id="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark mode">
-      <i class="ti ti-sun" style="font-size:15px"></i>
-    </div>
+    <div class="admin-btn" id="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark mode" style="font-size:16px;letter-spacing:0">☀</div>
     <a href="open_unc.bat" download="open_unc.bat" class="admin-btn" title="ดาวน์โหลด open_unc.bat แล้ว double-click เพื่อลงทะเบียน" style="text-decoration:none">
       <i class="ti ti-download" style="font-size:15px"></i> UNC Setup
     </a>
@@ -1159,10 +1157,10 @@ function toggleTheme() {
 function applyTheme(t) {
   if (t === 'light') {
     document.documentElement.setAttribute('data-theme', 'light');
-    document.getElementById('theme-toggle').innerHTML = '<i class="ti ti-moon" style="font-size:15px"></i>';
+    document.getElementById('theme-toggle').textContent = '🌙';
   } else {
     document.documentElement.removeAttribute('data-theme');
-    document.getElementById('theme-toggle').innerHTML = '<i class="ti ti-sun" style="font-size:15px"></i>';
+    document.getElementById('theme-toggle').textContent = '☀';
   }
 }
 applyTheme(localStorage.getItem('theme') || 'dark');
