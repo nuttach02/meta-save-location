@@ -71,11 +71,16 @@ html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Pl
 .search-title{font-size:13px;font-weight:700;color:var(--text2);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:8px}
 .search-title i{font-size:16px;color:var(--accent)}
 .input-wrap{position:relative}
-.input-wrap input{width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:14px 16px 14px 50px;color:var(--text);font-size:16px;font-weight:500;font-family:'Plus Jakarta Sans',sans-serif;outline:none;transition:all 0.25s}
+.input-wrap input{width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:14px 44px 14px 50px;color:var(--text);font-size:16px;font-weight:500;font-family:'Plus Jakarta Sans',sans-serif;outline:none;transition:all 0.25s}
 .input-wrap input::placeholder{color:var(--text3)}
 .input-wrap input:focus{border-color:var(--accent);background:var(--surface3)}
 .input-icon{position:absolute;left:16px;top:50%;transform:translateY(-50%);font-size:20px;color:var(--text3);transition:color 0.25s;pointer-events:none}
 .input-wrap input:focus ~ .input-icon{color:var(--accent)}
+.input-clear{position:absolute;right:14px;top:50%;transform:translateY(-50%);width:22px;height:22px;border-radius:50%;background:var(--surface3);border:none;cursor:pointer;display:none;align-items:center;justify-content:center;color:var(--text3);font-size:14px;transition:all 0.15s}
+.input-clear:hover{background:var(--border2);color:var(--text)}
+.model-subnav{display:none;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
+.model-subnav-label{font-size:11px;font-weight:700;color:var(--text3);letter-spacing:1.2px;text-transform:uppercase;margin-bottom:8px}
+.model-subnav-chips{display:flex;flex-wrap:wrap;gap:6px}
 .row-between{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-top:16px;padding-top:16px;border-top:1px solid var(--border)}
 .result-count{font-size:14px;font-weight:600;color:var(--text2)}
 
@@ -304,8 +309,13 @@ html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Pl
     <div class="search-card">
       <div class="search-title"><i class="ti ti-search"></i> Search by Model Name or Part Number</div>
       <div class="input-wrap">
-        <input type="text" id="pn-search" placeholder="Type a PN like  33F0SMA00V0  or model like  F0S Medusa" oninput="renderSearch()">
+        <input type="text" id="pn-search" placeholder="Type a PN like  33F0SMA00V0  or model like  F0S Medusa" oninput="onSearchInput()">
         <i class="ti ti-search input-icon"></i>
+        <button class="input-clear" id="search-clear" onclick="clearSearch()" title="Clear">✕</button>
+      </div>
+      <div id="model-subnav" class="model-subnav">
+        <div class="model-subnav-label" id="model-subnav-label"></div>
+        <div class="model-subnav-chips" id="model-subnav-chips"></div>
       </div>
       <div class="row-between">
         <div class="chips">
@@ -661,6 +671,7 @@ function toggleChip(val) {
     const el = document.getElementById('chip-'+c);
     if (el) el.className = 'chip chip-'+c + (activeChips.has(c) ? ' on' : '');
   });
+  updateModelSubnav();
   renderSearch();
 }
 
@@ -703,6 +714,7 @@ function relatedHtml(d) {
 
 function goRelated(name) {
   document.getElementById('pn-search').value = name;
+  updateClearBtn();
   activeChips = new Set(['all']);
   ['all','f0s','f0eg','f0es','xg1','f0ej'].forEach(c => {
     const el = document.getElementById('chip-'+c);
@@ -712,6 +724,45 @@ function goRelated(name) {
   const doaEl = document.getElementById('chip-doa');
   if (doaEl) doaEl.classList.remove('on');
   renderSearch();
+}
+
+function onSearchInput() {
+  updateClearBtn();
+  renderSearch();
+}
+
+function clearSearch() {
+  document.getElementById('pn-search').value = '';
+  updateClearBtn();
+  renderSearch();
+}
+
+function updateClearBtn() {
+  const val = document.getElementById('pn-search').value;
+  const btn = document.getElementById('search-clear');
+  if (btn) btn.style.display = val ? 'flex' : 'none';
+}
+
+function updateModelSubnav() {
+  const nav = document.getElementById('model-subnav');
+  const label = document.getElementById('model-subnav-label');
+  const chipsEl = document.getElementById('model-subnav-chips');
+  if (!nav) return;
+  if (activeChips.has('all') || activeChips.size !== 1) {
+    nav.style.display = 'none';
+    return;
+  }
+  const model = [...activeChips][0].toUpperCase();
+  const subs = DATA.filter(d => d.model.toLowerCase() === model.toLowerCase());
+  if (!subs.length) { nav.style.display = 'none'; return; }
+  const mc = MC[model] || {color:'var(--accent)'};
+  label.textContent = model + ' — ALL SUBMODELS';
+  chipsEl.innerHTML = subs.map(d => {
+    const enc = encodeURIComponent(d.submodel);
+    const lbl = d.submodel.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+    return `<span class="rel-chip" style="border-color:${mc.color}33;color:${mc.color}" onclick="goRelated(decodeURIComponent('${enc}'))">${lbl}</span>`;
+  }).join('');
+  nav.style.display = 'block';
 }
 
 function renderSearch() {
@@ -744,7 +795,6 @@ function renderSearch() {
             <div class="sm-row-name">${d.submodel}</div>
             <div class="pn-tags">${pnHtml}</div>
             <div class="srv-chips" style="margin-top:8px">${d.servers.map(srvChipHtml).join('')}</div>
-            ${relatedHtml(d)}
           </div>
         </div>`;
       }).join('');
