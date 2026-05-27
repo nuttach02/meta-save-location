@@ -213,6 +213,14 @@ html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Pl
 .ov-loctags{display:flex;flex-wrap:wrap;gap:6px}
 .ov-loctag{padding:5px 12px;border-radius:6px;font-size:13px;font-weight:600;color:var(--text2);background:var(--surface2);border:1px solid var(--border)}
 
+/* UNC ALERT BAR */
+.unc-alert-bar{background:var(--amber-soft);border-bottom:1px solid rgba(232,168,56,0.4);padding:10px 32px;display:flex;align-items:center;gap:12px;font-size:13px;font-weight:600;color:var(--amber);flex-wrap:wrap}
+.unc-alert-bar i{font-size:18px;flex-shrink:0}
+.unc-alert-btn{padding:5px 14px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid;transition:all 0.2s;font-family:'Plus Jakarta Sans',sans-serif;display:inline-flex;align-items:center;gap:5px}
+.unc-alert-btn-install{background:var(--amber-soft);border-color:rgba(232,168,56,0.6);color:var(--amber)}.unc-alert-btn-install:hover{background:var(--amber);color:#fff}
+.unc-alert-btn-done{background:var(--green-soft);border-color:rgba(76,175,125,0.5);color:var(--green)}.unc-alert-btn-done:hover{background:var(--green);color:#fff}
+.unc-alert-close{margin-left:auto;cursor:pointer;color:var(--amber);opacity:0.7;font-size:18px;line-height:1;flex-shrink:0;padding:2px 4px;border-radius:4px;transition:opacity 0.15s}.unc-alert-close:hover{opacity:1}
+
 /* EMPTY */
 .empty{text-align:center;padding:80px 20px;color:var(--text3)}
 .empty i{font-size:56px;display:block;margin-bottom:14px;opacity:0.4}
@@ -340,6 +348,15 @@ html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Pl
   <div class="nav-tab" id="tab-map" onclick="switchTab('map')">
     <i class="ti ti-hierarchy"></i> Server Map
   </div>
+</div>
+
+<!-- UNC ALERT BAR -->
+<div id="unc-alert-bar" class="unc-alert-bar" style="display:none">
+  <i class="ti ti-alert-triangle"></i>
+  <span>ยังไม่ได้ติดตั้ง <strong>UNC Path Handler</strong> — การคลิก IP เพื่อเปิด File Explorer จะ<strong>ไม่ทำงาน</strong> จนกว่าจะติดตั้ง</span>
+  <button class="unc-alert-btn unc-alert-btn-install" onclick="openHowto()"><i class="ti ti-download"></i> วิธีติดตั้ง</button>
+  <button class="unc-alert-btn unc-alert-btn-done" onclick="markUNCInstalled()"><i class="ti ti-check"></i> ติดตั้งแล้ว</button>
+  <span class="unc-alert-close" onclick="snoozeUNCAlert()" title="ปิดชั่วคราว">&times;</span>
 </div>
 
 <!-- MAIN -->
@@ -1181,6 +1198,16 @@ function closeHowto() {
   if (document.getElementById('howto-no-show').checked) {
     localStorage.setItem('unc_howto_seen', '1');
   }
+  markUNCInstalled();
+}
+function markUNCInstalled() {
+  localStorage.setItem('unc_installed', '1');
+  const bar = document.getElementById('unc-alert-bar');
+  if (bar) bar.style.display = 'none';
+}
+function snoozeUNCAlert() {
+  const bar = document.getElementById('unc-alert-bar');
+  if (bar) bar.style.display = 'none';
 }
 
 // ===== THEME =====
@@ -1200,7 +1227,10 @@ function applyTheme(t) {
   }
 }
 applyTheme(localStorage.getItem('theme') || 'dark');
-if (!localStorage.getItem('unc_howto_seen')) { openHowto(); }
+if (!localStorage.getItem('unc_installed')) {
+  document.getElementById('unc-alert-bar').style.display = 'flex';
+  if (!localStorage.getItem('unc_howto_seen')) { openHowto(); }
+}
 
 // ===== ADMIN =====
 const CRED = {u:'admin', p:'meta1234'}; // ← change credentials here
