@@ -1145,6 +1145,7 @@ function copyText(text, el) {
 function openPNPath(path) {
   const normalized = path.replace(/^\\\\/, '').replace(/\\/g, '/');
   window.location.href = 'openunc:' + normalized;
+  detectUNCFromNavigation();
 }
 function showPNPathPopup(pathsObj, el) {
   const popup = document.getElementById('pn-path-popup');
@@ -1165,9 +1166,19 @@ function showPNPathPopup(pathsObj, el) {
 function copyUNC(ip, el) {
   window.location.href = 'openunc:' + ip;
   const tip = el.querySelector('.copy-tip');
-  if (!tip) return;
-  tip.classList.add('show');
-  setTimeout(() => tip.classList.remove('show'), 2000);
+  if (tip) { tip.classList.add('show'); setTimeout(() => tip.classList.remove('show'), 2000); }
+  detectUNCFromNavigation();
+}
+
+function detectUNCFromNavigation() {
+  if (localStorage.getItem('unc_installed')) return;
+  let blurred = false;
+  const onBlur = () => { blurred = true; };
+  window.addEventListener('blur', onBlur, { once: true });
+  setTimeout(() => {
+    window.removeEventListener('blur', onBlur);
+    if (blurred) markUNCInstalled();
+  }, 1500);
 }
 document.addEventListener('click', e => {
   const popup = document.getElementById('pn-path-popup');
