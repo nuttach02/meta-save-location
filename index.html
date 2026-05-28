@@ -822,7 +822,14 @@ function toggleChip(val) {
 function buildLocMap(source) {
   const locMap = new Map();
   source.forEach(d => {
-    getLocs(d.servers).forEach(loc => {
+    const locs = getLocs(d.servers);
+    if (!locs.length) {
+      const key = '__unassigned__';
+      if (!locMap.has(key)) locMap.set(key, {building: '(Unassigned)', floor: '', doa: false, unassigned: true, items: []});
+      locMap.get(key).items.push(d);
+      return;
+    }
+    locs.forEach(loc => {
       const key = loc.building + '|' + loc.floor + '|' + (loc.doa ? '1' : '0');
       if (!locMap.has(key)) locMap.set(key, {building: loc.building, floor: loc.floor, doa: !!loc.doa, items: []});
       const slot = locMap.get(key);
@@ -830,6 +837,8 @@ function buildLocMap(source) {
     });
   });
   return [...locMap.values()].sort((a, b) => {
+    if (a.unassigned) return 1;
+    if (b.unassigned) return -1;
     if (a.building !== b.building) return a.building.localeCompare(b.building);
     if (a.floor !== b.floor) return a.floor.localeCompare(b.floor);
     return (a.doa ? 1 : 0) - (b.doa ? 1 : 0);
@@ -928,7 +937,7 @@ function renderSearch() {
   el.innerHTML = [...byBuilding.entries()].map(([bldg, floors], bi) => {
     const floorsHtml = floors.map(loc => {
       const rowsHtml = loc.items.map(d => {
-        const mc = MC[d.model];
+        const mc = MC[d.model] || {color:'#888', soft:'rgba(136,136,136,0.15)', text:'#fff'};
         const pnHtml = d.pns.map(pn => {
           const hi = q && pn.toLowerCase().includes(q);
           const pd = d.pnPaths && d.pnPaths[pn];
@@ -956,7 +965,9 @@ function renderSearch() {
       }).join('');
       return `<div class="floor-section">
         <div class="floor-hd">
-          <span class="lpill lpill-f" style="font-size:14px;font-weight:800;padding:6px 16px"><i class="ti ti-layers-subtract"></i>${loc.floor}</span>
+          ${loc.unassigned
+            ? `<span class="lpill" style="font-size:14px;font-weight:800;padding:6px 16px;background:var(--red-soft);color:var(--red);border:1px solid rgba(224,92,106,0.3)"><i class="ti ti-unlink"></i>No Server Assigned</span>`
+            : `<span class="lpill lpill-f" style="font-size:14px;font-weight:800;padding:6px 16px"><i class="ti ti-layers-subtract"></i>${loc.floor}</span>`}
           ${loc.doa ? '<span class="lpill lpill-doa"><i class="ti ti-alert-triangle"></i>DOA</span>' : ''}
           <span style="margin-left:auto;color:var(--text3);font-size:13px;font-weight:600">${loc.items.length} submodel${loc.items.length !== 1 ? 's' : ''}</span>
         </div>
@@ -989,7 +1000,7 @@ function renderServerSearch() {
     matches.forEach(d => { if (!byModel[d.model]) byModel[d.model]=[]; byModel[d.model].push(d); });
     const typePillClass = srvTypeClass(s.type);
     const modelHtml = Object.entries(byModel).map(([model, items]) => {
-      const mc = MC[model];
+      const mc = MC[model] || {color:'#888', soft:'rgba(136,136,136,0.15)', text:'#fff'};
       const pns = items.flatMap(it => it.pns);
       return `<div class="model-block">
         <div class="model-block-title" style="color:${mc.color}">
@@ -1042,7 +1053,7 @@ function renderOverview() {
   const locView = [...byBuilding.entries()].map(([bldg, floors], bi) => {
     const floorsHtml = floors.map(loc => {
       const tagsHtml = loc.items.map(d => {
-        const mc = MC[d.model];
+        const mc = MC[d.model] || {color:'#888', soft:'rgba(136,136,136,0.15)', text:'#fff'};
         return `<span class="ov-subtag" style="color:${mc.color};border-color:${mc.color}44;background:${mc.soft}">${d.model} · ${d.submodel}</span>`;
       }).join('');
       return `<div class="floor-section" style="margin-bottom:8px">
@@ -1319,7 +1330,7 @@ function renderAdminSm() {
   document.getElementById('admin-sm-tbody').innerHTML = DATA.map((d, i) => ({d, i}))
     .filter(({d}) => !q || d.model.toLowerCase().includes(q) || d.submodel.toLowerCase().includes(q))
     .map(({d, i}) => {
-    const mc = MC[d.model];
+    const mc = MC[d.model] || {color:'#888', soft:'rgba(136,136,136,0.15)', text:'#fff'};
     return `<tr>
       <td><span style="background:${mc.soft};color:${mc.color};border:1.5px solid ${mc.color}55;padding:3px 10px;border-radius:5px;font-size:12px;font-weight:800">${d.model}</span></td>
       <td style="color:var(--text);font-weight:600">${d.submodel}</td>
@@ -1508,6 +1519,7 @@ function saveSmModal() {
   };
   if (!entry.submodel) { alert('Submodel name is required'); return; }
   if (!entry.pns.length) { alert('At least one part number is required'); return; }
+  if (!entry.servers.length) { alert('At least one server must be assigned'); return; }
   const idx = parseInt(document.getElementById('sm-edit-idx').value);
   if (idx === -1) { DATA.push(entry); } else { DATA[idx] = entry; }
   saveData(); closeSmModal(); renderAdminSm();
