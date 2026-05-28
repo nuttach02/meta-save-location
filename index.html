@@ -867,6 +867,7 @@ function relatedHtml(d) {
 
 function goRelated(name) {
   document.getElementById('pn-search').value = name;
+  activeSubmodel = null;
   updateClearBtn();
   activeChips = new Set(['all']);
   ['all','f0s','f0eg','f0es','xg1','f0ej'].forEach(c => {
@@ -974,9 +975,12 @@ function renderSearch() {
         <div class="floor-rows">${rowsHtml}</div>
       </div>`;
     }).join('');
+    const isUnassigned = floors.some(loc => loc.unassigned);
     return `<div class="bldg-section" style="animation-delay:${bi * 0.08}s">
       <div class="bldg-header">
-        <span class="lpill lpill-b" style="font-size:16px;font-weight:800;padding:8px 22px"><i class="ti ti-building"></i>${bldg}</span>
+        ${isUnassigned
+          ? `<span class="lpill" style="font-size:16px;font-weight:800;padding:8px 22px;background:var(--red-soft);color:var(--red);border:1px solid rgba(224,92,106,0.3)"><i class="ti ti-unlink"></i>Unassigned</span>`
+          : `<span class="lpill lpill-b" style="font-size:16px;font-weight:800;padding:8px 22px"><i class="ti ti-building"></i>${bldg}</span>`}
         <div style="flex:1;height:1px;background:var(--border)"></div>
       </div>
       ${floorsHtml}
@@ -995,7 +999,7 @@ function renderServerSearch() {
   }
   el.innerHTML = ips.map((ip, i) => {
     const s = SERVERS[ip];
-    const matches = DATA.filter(d => d.servers.includes(ip));
+    const matches = DATA.filter(d => (d.servers || []).includes(ip));
     const byModel = {};
     matches.forEach(d => { if (!byModel[d.model]) byModel[d.model]=[]; byModel[d.model].push(d); });
     const typePillClass = srvTypeClass(s.type);
@@ -1058,16 +1062,21 @@ function renderOverview() {
       }).join('');
       return `<div class="floor-section" style="margin-bottom:8px">
         <div class="floor-hd">
-          <span class="lpill lpill-f" style="font-size:13px;font-weight:800"><i class="ti ti-layers-subtract"></i>${loc.floor}</span>
+          ${loc.unassigned
+            ? `<span class="lpill" style="font-size:13px;font-weight:800;background:var(--red-soft);color:var(--red);border:1px solid rgba(224,92,106,0.3);padding:6px 16px"><i class="ti ti-unlink"></i>No Server</span>`
+            : `<span class="lpill lpill-f" style="font-size:13px;font-weight:800"><i class="ti ti-layers-subtract"></i>${loc.floor}</span>`}
           ${loc.doa ? '<span class="lpill lpill-doa"><i class="ti ti-alert-triangle"></i>DOA</span>' : ''}
           <span style="margin-left:auto;color:var(--text3);font-size:12px;font-weight:600">${loc.items.length} submodel${loc.items.length !== 1 ? 's' : ''}</span>
         </div>
         <div style="padding:12px 16px;display:flex;flex-wrap:wrap;gap:6px">${tagsHtml}</div>
       </div>`;
     }).join('');
+    const isUnassignedBldg = floors.some(loc => loc.unassigned);
     return `<div class="bldg-section" style="animation-delay:${bi * 0.08}s">
       <div class="bldg-header">
-        <span class="lpill lpill-b" style="font-size:15px;font-weight:800;padding:7px 20px"><i class="ti ti-building"></i>${bldg}</span>
+        ${isUnassignedBldg
+          ? `<span class="lpill" style="font-size:15px;font-weight:800;padding:7px 20px;background:var(--red-soft);color:var(--red);border:1px solid rgba(224,92,106,0.3)"><i class="ti ti-unlink"></i>Unassigned</span>`
+          : `<span class="lpill lpill-b" style="font-size:15px;font-weight:800;padding:7px 20px"><i class="ti ti-building"></i>${bldg}</span>`}
         <div style="flex:1;height:1px;background:var(--border)"></div>
       </div>
       ${floorsHtml}
@@ -1335,7 +1344,7 @@ function renderAdminSm() {
       <td><span style="background:${mc.soft};color:${mc.color};border:1.5px solid ${mc.color}55;padding:3px 10px;border-radius:5px;font-size:12px;font-weight:800">${d.model}</span></td>
       <td style="color:var(--text);font-weight:600">${d.submodel}</td>
       <td>${d.pns.length}</td>
-      <td>${d.servers.length}</td>
+      <td>${(d.servers || []).length}</td>
       <td><div class="row-acts">
         <button class="btn btn-ghost btn-sm" onclick="openSmEdit(${i})"><i class="ti ti-edit"></i> Edit</button>
         <button class="btn btn-red btn-sm" onclick="deleteSm(${i})"><i class="ti ti-trash"></i></button>
@@ -1401,7 +1410,7 @@ function refreshPnPaths() {
   if (!pnTags.length) { sec.style.display = 'none'; return; }
   sec.style.display = 'block';
   const servers = [...srvChkSel];
-  rows.innerHTML = pnTags.map(pn => {
+  rows.innerHTML = pnTags.map((pn, pnIdx) => {
     const raw = pnPaths[pn];
     const norm = !raw ? {mode:'same',path:''} : typeof raw === 'string' ? {mode:'same',path:raw} : raw;
     const isSame = norm.mode !== 'per-server';
@@ -1415,21 +1424,21 @@ function refreshPnPaths() {
     const inputsHtml = isSame
       ? `<input type="text" class="form-ctrl" style="font-size:12px;padding:7px 10px;margin-top:6px" placeholder="\\\\server\\share\\folder"
            value="${(norm.path||'').replace(/"/g,'&quot;')}"
-           oninput="if(!pnPaths['${pn}'])pnPaths['${pn}']={mode:'same'};pnPaths['${pn}'].path=this.value.trim()">`
+           oninput="if(!pnPaths[pnTags[${pnIdx}]])pnPaths[pnTags[${pnIdx}]]={mode:'same'};pnPaths[pnTags[${pnIdx}]].path=this.value.trim()">`
       : servers.map(ip => {
           const v = ((norm.paths||{})[ip]||'').replace(/"/g,'&quot;');
           return `<div style="display:flex;gap:8px;align-items:center;margin-top:5px">
             <span style="font-family:monospace;font-size:11px;color:var(--text3);min-width:120px;flex-shrink:0">${ip}</span>
             <input type="text" class="form-ctrl" style="font-size:12px;padding:6px 10px" placeholder="\\\\${ip}\\share\\folder"
               value="${v}"
-              oninput="if(!pnPaths['${pn}'])pnPaths['${pn}']={mode:'per-server',paths:{}};if(!pnPaths['${pn}'].paths)pnPaths['${pn}'].paths={};pnPaths['${pn}'].paths['${ip}']=this.value.trim()">
+              oninput="if(!pnPaths[pnTags[${pnIdx}]])pnPaths[pnTags[${pnIdx}]]={mode:'per-server',paths:{}};if(!pnPaths[pnTags[${pnIdx}]].paths)pnPaths[pnTags[${pnIdx}]].paths={};pnPaths[pnTags[${pnIdx}]].paths['${ip}']=this.value.trim()">
           </div>`;
         }).join('');
     return `<div style="background:var(--surface3);border-radius:8px;padding:10px 12px;margin-bottom:8px">
       <div style="display:flex;align-items:center;gap:8px">
         <span style="font-family:monospace;font-size:12px;font-weight:700;color:var(--text);flex:1">${pn}</span>
-        <button style="${btnSame}" onclick="setPnMode('${pn}','same')">Same path</button>
-        <button style="${btnSrv}" onclick="setPnMode('${pn}','per-server')">Per server</button>
+        <button style="${btnSame}" onclick="setPnMode(pnTags[${pnIdx}],'same')">Same path</button>
+        <button style="${btnSrv}" onclick="setPnMode(pnTags[${pnIdx}],'per-server')">Per server</button>
       </div>
       ${inputsHtml}
     </div>`;
