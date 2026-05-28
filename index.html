@@ -51,7 +51,7 @@
   --green-soft:rgba(46,158,98,0.12);
   --amber:#c47f0a;
   --amber-soft:rgba(196,127,10,0.1);
-  --red:#33292a;
+  --red:#c0394a;
   --red-soft:rgba(192,57,74,0.1);
   --purple:#7c52d0;
   --purple-soft:rgba(124,82,208,0.12);
@@ -1435,6 +1435,7 @@ function toggleSrvChk(ip) {
   srvChkSel.has(ip) ? srvChkSel.delete(ip) : srvChkSel.add(ip);
   const el = document.getElementById('chk-' + ip.replace(/\./g, '_'));
   if (el) el.classList.toggle('checked', srvChkSel.has(ip));
+  refreshPnPaths();
 }
 function getCheckedSrvs() {
   return [...srvChkSel];
@@ -1492,6 +1493,7 @@ function saveSmModal() {
     pnPaths: filteredPaths
   };
   if (!entry.submodel) { alert('Submodel name is required'); return; }
+  if (!entry.pns.length) { alert('At least one part number is required'); return; }
   const idx = parseInt(document.getElementById('sm-edit-idx').value);
   if (idx === -1) { DATA.push(entry); } else { DATA[idx] = entry; }
   saveData(); closeSmModal(); renderAdminSm();
@@ -1530,11 +1532,15 @@ function closeSrvModal() { document.getElementById('srv-modal').style.display = 
 function saveSrvModal() {
   const origIp = document.getElementById('srv-edit-ip').value;
   const ip = document.getElementById('srv-ip').value.trim();
+  const building = document.getElementById('srv-building').value.trim();
+  const floor = document.getElementById('srv-floor').value.trim();
   if (!ip) { alert('IP address is required'); return; }
+  if (!building) { alert('Building is required'); return; }
+  if (!floor) { alert('Floor is required'); return; }
   const entry = {
     type: document.getElementById('srv-type').value,
-    building: document.getElementById('srv-building').value.trim(),
-    floor: document.getElementById('srv-floor').value.trim()
+    building,
+    floor
   };
   if (document.getElementById('srv-doa').checked) entry.doa = true;
   if (origIp && origIp !== ip) delete SERVERS[origIp];
@@ -1543,7 +1549,9 @@ function saveSrvModal() {
 }
 function deleteSrv(ip) {
   if (!confirm(`Delete server ${ip}?`)) return;
-  delete SERVERS[ip]; saveData(); renderAdminSrv();
+  delete SERVERS[ip];
+  DATA.forEach(d => { d.servers = d.servers.filter(s => s !== ip); });
+  saveData(); renderAdminSrv();
 }
 </script>
 
