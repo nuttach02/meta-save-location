@@ -703,21 +703,28 @@ async function pushToFirestore() {
 function subscribeFirestore() {
   showSyncBadge('syncing');
   DOC.onSnapshot(snap => {
+    let updatedAt;
     if (snap.exists) {
       const d = snap.data();
       if (d.servers)   SERVERS = d.servers;
       if (d.submodels) DATA    = d.submodels;
+      updatedAt = d.updated_at;
     } else {
       pushToFirestore();
     }
     showSyncBadge('ok');
-    updateTimestamp();
+    updateTimestamp(updatedAt);
     renderSearch();
     const ap = document.querySelector('.panel.active');
     if (ap) {
       if (ap.id === 'panel-server')   renderServerSearch();
       if (ap.id === 'panel-overview') renderOverview();
       if (ap.id === 'panel-map')      renderServerMap();
+    }
+    const adminPanel = document.getElementById('admin-panel');
+    if (adminPanel && adminPanel.style.display !== 'none') {
+      if (document.getElementById('asec-submodels').style.display !== 'none') renderAdminSm();
+      else renderAdminSrv();
     }
   }, err => {
     console.warn('Firestore snapshot error:', err);
@@ -740,11 +747,18 @@ function showSyncBadge(state) {
   if (state === 'ok') setTimeout(() => { el.style.display = 'none'; }, 2500);
 }
 
-function updateTimestamp() {
-  const raw = localStorage.getItem('meta_updated');
+function updateTimestamp(firestoreTs) {
   const el = document.getElementById('hbadge-updated');
-  if (!el || !raw) return;
-  const d = new Date(raw);
+  if (!el) return;
+  let d;
+  if (firestoreTs && firestoreTs.toDate) {
+    d = firestoreTs.toDate();
+    localStorage.setItem('meta_updated', d.toISOString());
+  } else {
+    const raw = localStorage.getItem('meta_updated');
+    if (!raw) return;
+    d = new Date(raw);
+  }
   el.textContent = 'Updated: ' + d.toLocaleDateString('en-GB', {day:'numeric', month:'short'})
     + ' ' + d.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'});
   el.style.display = '';
@@ -1460,7 +1474,7 @@ function openSmEdit(i) {
   const raw = d.pnPaths || {};
   pnPaths = {};
   Object.entries(raw).forEach(([pn, v]) => {
-    pnPaths[pn] = typeof v === 'string' ? {mode:'same', path:v} : v;
+    pnPaths[pn] = typeof v === 'string' ? {mode:'same', path:v} : JSON.parse(JSON.stringify(v));
   });
   document.getElementById('sm-modal-title').innerHTML = '<i class="ti ti-edit"></i> Edit Submodel';
   document.getElementById('sm-edit-idx').value = i;
